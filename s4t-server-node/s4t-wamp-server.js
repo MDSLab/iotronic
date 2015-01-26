@@ -22,8 +22,10 @@ var autobahn = require('autobahn');
 var boards = {};
 var express = require('express');
 
+var url_wamp_router = "ws://localhost:8080/ws";  //example of url wamp router
+
 var connection = new autobahn.Connection({
-	url: "ws://172.17.3.139:8181/ws",
+	url: url_wamp_router,
 	realm: "s4t"
 });
 
