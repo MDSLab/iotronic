@@ -27,19 +27,44 @@ from autobahn.twisted.wamp import ApplicationSession
 from autobahn.twisted.wamp import ApplicationRunner
 from twisted.internet.defer import inlineCallbacks
 
-from twisted.internet import reactor
-
-
 from flask import Flask
 from flask.ext import restful
 
 import threading
+import multiprocessing
 
 urlWampRouter = "ws://ip:port/ws"
 realmWampRouter = "s4t"
 topic = 'board.connection'
 
-class restServer():
+'''
+class comevuoi_T(threading.Thread):
+	def __init__(self):
+		threading.Thread.__init__(self)
+		self.runner = ApplicationRunner(url = urlWampRouter, realm = realmWampRouter)
+	
+	def run(self):
+		self.runner.run(S4TWampServer)
+
+class serverRest(threading.Thread):
+
+	class Wellcome(restful.Resource):
+		def get(self):
+			return{'Wellcome'}
+
+	def __init__(self):
+		threading.Thread.__init__(self)
+		self.app = Flask(__name__)
+		self.api = restful.Api(self.app)
+		
+	
+	def run(self):	
+		self.app.run(port=5566, debug=True)
+
+'''
+
+class serverRest():
+
 	class Wellcome(restful.Resource):
 		def get(self):
 			return{'Wellcome'}
@@ -52,16 +77,13 @@ class restServer():
 	def avvio(self):
 		self.app.run(port=5566, debug=True)
 
-@inlineCallbacks
-def startREST():
-	x = restServer()
-	x.avvio()
 
 class S4TWampServer(ApplicationSession):
 
 	@inlineCallbacks
 	def onJoin(self, details):
-
+	
+		
 		self.connectedBoard = {}
 		
 		print("Connect to WAMP Router")
@@ -80,30 +102,24 @@ class S4TWampServer(ApplicationSession):
 
 			
 		try:
-			
-			yield self.subscribe(onMessage, topic)
+			yield  self.subscribe(onMessage, topic)
 			print ("subscribed to topic:: "+topic)
-
 		except Exception as e:
 			print("could not subscribe to topic: {0}".format(e))
 
 
+
+x = serverRest()
+
+def worker():
+	"""worker function"""
+	x.avvio()
+
+
 if __name__ == '__main__':
-	#rest = serverRest()
-	#rest.start()
-	#t1 = threading.Thread(target=x.avvio())
-	#t1.start()
-	#t1.join()
-
-	#wamp = wampT()
-	#wamp.start()
+	#rest = multiprocessing.Process(target=worker)
 	
-	reactor.run(startREST())
-
+	#rest.start()
 	runner = ApplicationRunner(url = urlWampRouter, realm = realmWampRouter)
 	runner.run(S4TWampServer)
-
-	#serverRest().start()
-
-	#runner = ApplicationRunner(url = urlWampRouter, realm = realmWampRouter)
-	#runner.run(S4TWampServer)
+	print ("Prova")
