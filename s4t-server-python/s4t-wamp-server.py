@@ -27,47 +27,23 @@ from autobahn.twisted.wamp import ApplicationSession
 from autobahn.twisted.wamp import ApplicationRunner
 from twisted.internet.defer import inlineCallbacks
 
-from twisted.internet import reactor
-
-
-from flask import Flask
-from flask.ext import restful
-
-import threading
-
-urlWampRouter = "ws://ip:port/ws"
+urlWampRouter = "ws://172.17.3.139:8181/ws"
 realmWampRouter = "s4t"
-topic = 'board.connection'
-
-class restServer():
-	class Wellcome(restful.Resource):
-		def get(self):
-			return{'Wellcome'}
-
-	def __init__(self):
-		self.app = Flask(__name__)
-		self.api = restful.Api(self.app)
-		self.api.add_resource(self.Wellcome, '/')
-
-	def avvio(self):
-		self.app.run(port=5566, debug=True)
-
-@inlineCallbacks
-def startREST():
-	x = restServer()
-	x.avvio()
 
 class S4TWampServer(ApplicationSession):
 
 	@inlineCallbacks
 	def onJoin(self, details):
-
 		self.connectedBoard = {}
+		self.topic_connection = self.config.extra['topic_connection']
+		self.topic_command = self.config.extra['topic_command']
 		
-		print("Connect to WAMP Router")
+		print("Sessio attached [Connect to WAMP Router]")
 
 		def onMessage(*args):
+			#DEBUG Message
 			print args
+			
 			if args[1] == 'connection':
 				print(args[0]+ " connessa")
 				self.connectedBoard[args[0]] = args[0]
@@ -78,32 +54,26 @@ class S4TWampServer(ApplicationSession):
 				del self.connectedBoard[args[0]]
 				print self.connectedBoard
 
-			
-		try:
-			
-			yield self.subscribe(onMessage, topic)
-			print ("subscribed to topic:: "+topic)
+		try:			
+			yield self.subscribe(onMessage, self.topic_connection) #threads.deferToThread(self.subscribe(onMessage, self.topic_connection))
+			print ("Subscribed to topic: "+self.topic_connection)
 
 		except Exception as e:
-			print("could not subscribe to topic: {0}".format(e))
+			print("could not subscribe to topic:" +self.topic_connection)
 
+		#def pubB(msg=''):
+		yield self.publish(self.topic_connection,'pippo')#threads.deferToThread(self.publish(self.topic_connection,'pippo'))
+
+class s4_wamp_server:
+	def __init__(self, t_connection, t_command):
+		self.topic_connection = t_connection
+		self.topic_command = t_command
+				
+	def start(self):		
+		self.runner = ApplicationRunner(url = urlWampRouter, realm = realmWampRouter, extra={'topic_connection':self.topic_connection, 'topic_command':self.topic_command})	
+		self.runner.run(S4TWampServer)
 
 if __name__ == '__main__':
-	#rest = serverRest()
-	#rest.start()
-	#t1 = threading.Thread(target=x.avvio())
-	#t1.start()
-	#t1.join()
 
-	#wamp = wampT()
-	#wamp.start()
-	
-	reactor.run(startREST())
-
-	runner = ApplicationRunner(url = urlWampRouter, realm = realmWampRouter)
-	runner.run(S4TWampServer)
-
-	#serverRest().start()
-
-	#runner = ApplicationRunner(url = urlWampRouter, realm = realmWampRouter)
-	#runner.run(S4TWampServer)
+	server = s4_wamp_server('board.connection', 'board.command')
+	server.start()

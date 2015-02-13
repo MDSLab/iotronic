@@ -34,7 +34,7 @@ s4t_wamp_server.prototype.start = function(restPort){
    var getIP = require('./getIP.js');
    var IPLocal = getIP('eth0', 'IPv4');
 
-   var url_wamp_router = "ws://ip:port/ws";  //example of url wamp router
+   var url_wamp_router = "ws://172.17.3.139:8181/ws";  //example of url wamp router
 
    var connection = new autobahn.Connection({
       url: url_wamp_router,
@@ -100,6 +100,8 @@ s4t_wamp_server.prototype.start = function(restPort){
 
       var onBoardConnected = function (args){
       	//registrare le schede che si connettono
+         console.log(args);
+         
       	if(args[1]=='connection'){
       		boards[args[0]] = args[0];
       		//DEBUGGG Message
