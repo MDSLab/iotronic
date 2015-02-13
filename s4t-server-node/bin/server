@@ -28,4 +28,4 @@ var s4t = require("../lib/s4t_WS");
 
 var server = new s4t.server
 
-server.start(6655);
+server.start(8888,'ws://212.189.207.109:8181/ws');

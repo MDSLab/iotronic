@@ -27,17 +27,18 @@ s4t_wamp_server = function(){
 
 }
 
-s4t_wamp_server.prototype.start = function(restPort){
+s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
 
 
    var boards = {};
    var getIP = require('./getIP.js');
    var IPLocal = getIP('eth0', 'IPv4');
 
-   var url_wamp_router = "ws://172.17.3.139:8181/ws";  //example of url wamp router
+   //var url_wamp_router = "ws://172.17.3.139:8181/ws";  //example of url wamp router
 
    var connection = new autobahn.Connection({
-      url: url_wamp_router,
+      //url: url_wamp_router,
+      url:wamp_router_url,
       realm: "s4t"
    });
 
@@ -68,10 +69,16 @@ s4t_wamp_server.prototype.start = function(restPort){
    			var port = randomIntInc(6000,7000);
    			session.publish(topic_command, [board, command, port]);
    			if(command == 'ssh'){
-               res.send("ssh -p "+port+" root@"+IPLocal);   
+               //res.send("ssh -p "+port+" root@"+IPLocal);
+               res.json(IPLocal+':'+port);  
             }
             if(command == 'ideino'){
-               res.send("http://"+IPLocal+":"+port);
+               //res.send("http://"+IPLocal+":"+port);
+               res.json(IPLocal+':'+port);
+            }
+            if(command == 'osjs'){
+               //res.send("http://"+IPLocal+":"+port);
+               res.json(IPLocal+':'+port);
             }
             
    		}
@@ -82,14 +89,24 @@ s4t_wamp_server.prototype.start = function(restPort){
 
    	rest.get('/list/', function (req, res){
    		
-   		var board_list='';
+         var response='{ list: ['
+   		//var board_list='';
    		
-   		for (var i in boards){
-      			board_list += boards[i];
-               command_list = "ssh"
-      		}
+   		//for (var i in boards){
+      	//		board_list += boards[i];
+         //      command_list = "ssh"
+      	//	}
+         for (var i in boards){
+            response += boards[i]+"," 
+         }
+         var len = response.length;
+         response = response.slice(0,len-1);
+         response += '] }'
 
-      		res.send('List of the board: '+board_list+'<br>'+'use URL: '+IPLocal+":"+'6655'+"/commad/?board=board_name&command=ssh|ideino");
+
+
+      	//res.send('List of the board: '+board_list+'<br>'+'use URL: '+IPLocal+":"+restPort+"/commad/?board=board_name&command=ssh|ideino");
+         res.json(response);
    	});
 
    	rest.listen(restPort);
