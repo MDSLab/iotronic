@@ -58,32 +58,96 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
 
          //DEBUG Message
    		console.log('POST::::'+req.originalUrl);
-   		var board = req.query.board
-   		var command = req.query.command
+   		
+         var board = req.query.board;
+   		var command = req.query.command;
+         var pin = req.query.pin;
+         var mode = req.query.mode;
+         var value = req.query.value;
 
    		if(boards[board] != undefined){
    			//DEBUG Message
-            //
-   			console.log("ID exsist");
-   			//random port for reverse service
-   			var port = randomIntInc(6000,7000);
-   			session.publish(topic_command, [board, command, port]);
-   			if(command == 'ssh'){
-               //res.send("ssh -p "+port+" root@"+IPLocal);
-               res.json(IPLocal+':'+port);  
+            console.log("ID exsist");
+
+            switch(board){
+               case 'ssh':
+                  //random port for reverse service
+   			      var port = randomIntInc(6000,7000);
+   			      session.publish(topic_command, [board, command, port]);
+                  //res.send("ssh -p "+port+" root@"+IPLocal);
+                  res.json(IPLocal+':'+port);
+                  break;
+
+               case 'ideino':
+                  var port = randomIntInc(6000,7000);
+                  session.publish(topic_command, [board, command, port]);
+                  //res.send("http://"+IPLocal+":"+port);
+                  res.json(IPLocal+':'+port);
+                  break;
+
+               case 'osjs':
+                  var port = randomIntInc(6000,7000);
+                  session.publish(topic_command, [board, command, port]);
+                  //res.send("http://"+IPLocal+":"+port);
+                  res.json(IPLocal+':'+port);
+                  break;
+
+               case 'mode':
+                  if(pin>=2 && pin<=13){
+                     if(mode === 'input' || mode ==='output'){
+                        session.publish(topic_command, [board, command, pin, mode]);
+                        res.json(pin+':'+mode);
+                        break;
+                     }
+                     else{
+                        res.json('null');
+                        break;   
+                     }
+                  }
+                  else{
+                     res.json('null');
+                     break;
+                  }
+
+               //Analog Write
+               case 'analog':
+                  if(pin>=2 && pin<=13){
+                     if(value<=0 && value <=1024){
+                        session.publish(topic_command, [board, command+'write', pin, value]);
+                        res.json(pin+':'+value);
+                        break;
+                     }
+                     else{
+                        res.json('null');
+                        break;
+                     }
+                  }
+                  else{
+                     res.json('null');
+                     break;  
+                  }
+               //Analog Write
+               case 'digital':
+                  if(pin>=2 && pin<=13){
+                     if(value==0 || value==1){
+                        session.publish(topic_command, [board, command+'write', pin, value]);
+                        res.json(pin+':'+value);
+                        break;
+                     }
+                     else{
+                        res.json('null');
+                        break;
+                     }
+                   }
+                  else{
+                     res.json('null');
+                     break;  
+                  }
             }
-            if(command == 'ideino'){
-               //res.send("http://"+IPLocal+":"+port);
-               res.json(IPLocal+':'+port);
-            }
-            if(command == 'osjs'){
-               //res.send("http://"+IPLocal+":"+port);
-               res.json(IPLocal+':'+port);
-            }
-            
    		}
    		else
-   			res.send("Error: malformed REST ");	
+   			//res.send("Error: malformed REST ");
+            res.json('null');	
 
    	});
 
