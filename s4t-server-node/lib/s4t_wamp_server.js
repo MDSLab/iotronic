@@ -57,7 +57,7 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
    	rest.get('/command/', function (req, res){
 
          //DEBUG Message
-   		console.log('POST::::'+req.originalUrl);
+   		//console.log('POST::::'+req.originalUrl);
    		
          var board = req.query.board;
    		var command = req.query.command;
@@ -67,9 +67,9 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
 
    		if(boards[board] != undefined){
    			//DEBUG Message
-            console.log("ID exsist");
-
-            switch(board){
+            //console.log("ID exsist");
+            //console.log(command);
+            switch(command){
                case 'ssh':
                   //random port for reverse service
    			      var port = randomIntInc(6000,7000);
@@ -143,6 +143,10 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                      res.json('null');
                      break;  
                   }
+
+               default:
+                  res.json('null')
+                  break;
             }
    		}
    		else
