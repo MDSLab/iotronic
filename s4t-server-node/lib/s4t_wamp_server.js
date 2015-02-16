@@ -110,7 +110,7 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                   if(value!=undefined){//WRITE
                      console.log('ANALOG WRITE');
                      if(value<=0 && value <=1024){
-                        session.publish(topic_command, [board, command+'write', pin, value]);
+                        session.publish(topic_command, [board, command, pin, value]);
                         res.json(pin+':'+value);
                         break;
                      }
@@ -121,7 +121,7 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                   }
                   else{//READ 
                      console.log('ANALOG WRITE');
-                     session.publish(topic_command, [board, command+'read', pin]);   
+                     session.publish(topic_command, [board, command, pin]);   
                      res.json(pin);
                      break;
                   }
@@ -132,7 +132,7 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                   if(value!=undefined){//WRITE
                      console.log('DIGITAL WRITE');
                      if(value==0 || value==1){//WRITE
-                        session.publish(topic_command, [board, command+'write', pin, value]);
+                        session.publish(topic_command, [board, command, pin, value]);
                         res.json(pin+':'+value);
                         break;
                      }
@@ -143,7 +143,7 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                   }
                   else{//READ
                      console.log('DIGITAL READ');
-                     session.publish(topic_command, [board, command+'read', pin]);   
+                     session.publish(topic_command, [board, command, pin]);   
                      res.json(pin);
                      break;
                   }
