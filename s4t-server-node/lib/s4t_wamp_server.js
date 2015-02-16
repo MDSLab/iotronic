@@ -120,12 +120,11 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                      }
                   }
                   else{//READ 
-                     console.log('ANALOG WRITE');
+                     console.log('ANALOG READ');
                      session.call('command.rpc.read.analog', [board, command, pin]).then(
                         function(result){
                            res.json(result);
-                        }
-                     );
+                        },session.log);
                      break;
                   }
                
