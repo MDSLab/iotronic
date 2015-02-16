@@ -121,8 +121,13 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                   }
                   else{//READ 
                      console.log('ANALOG WRITE');
-                     session.publish(topic_command, [board, command, pin]);   
-                     res.json(pin);
+                     session.call('command.rpc.read.analog', [board, command, pin]).then(
+                        function(result){
+                          res.json(result);
+                        }
+                     );
+                     //session.publish(topic_command, [board, command, pin]);   
+                     
                      break;
                   }
                
@@ -143,8 +148,10 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                   }
                   else{//READ
                      console.log('DIGITAL READ');
-                     session.publish(topic_command, [board, command, pin]);   
-                     res.json(pin);
+                     session.call('command.rpc.read.digital', [board, command, pin]).then(
+                        function(result){
+                          res.json(result);
+                        }
                      break;
                   }
 
