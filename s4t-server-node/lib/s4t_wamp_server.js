@@ -104,32 +104,44 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                      break;   
                   }
                
-               //Analog Write
+               //Analog
                case 'analog':
-                  
-                  if(value<=0 && value <=1024){
-                     session.publish(topic_command, [board, command+'write', pin, value]);
-                     res.json(pin+':'+value);
-                     break;
+                  if(value!=undefined){//WRITE
+                     if(value<=0 && value <=1024){
+                        session.publish(topic_command, [board, command+'write', pin, value]);
+                        res.json(pin+':'+value);
+                        break;
+                     }
+                     else{
+                        res.json('null');
+                        break;
+                     }
                   }
-                  else{
-                     res.json('null');
+                  else{//READ 
+                     session.publish(topic_command, [board, command+'read', pin]);   
+                     res.json(pin);
                      break;
                   }
                
-               //Analog Write
+               //Digital
                case 'digital':
-                  
-                  if(value==0 || value==1){
-                     session.publish(topic_command, [board, command+'write', pin, value]);
-                     res.json(pin+':'+value);
+                  if(value!=undefined){//WRITE
+                     if(value==0 || value==1){//WRITE
+                        session.publish(topic_command, [board, command+'write', pin, value]);
+                        res.json(pin+':'+value);
+                        break;
+                     }
+                     else{
+                        res.json('null');
+                        break;
+                     }
+                  }
+                  else{//READ
+                     session.publish(topic_command, [board, command+'read', pin]);   
+                     res.json(pin);
                      break;
                   }
-                  else{
-                     res.json('null');
-                     break;
-                  }
-                  
+
                default:
                   res.json('null')
                   break;
