@@ -106,7 +106,7 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                
                //Analog
                case 'analog':
-                  cosole.log('VALORE='+value);
+                  console.log('VALORE='+value);
                   if(value!=undefined){//WRITE
                      console.log('ANALOG WRITE');
                      if(value<=0 && value <=1024){
@@ -128,7 +128,7 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                
                //Digital
                case 'digital':
-                  cosole.log('VALORE='+value);
+                  console.log('VALORE='+value);
                   if(value!=undefined){//WRITE
                      console.log('DIGITAL WRITE');
                      if(value==0 || value==1){//WRITE
