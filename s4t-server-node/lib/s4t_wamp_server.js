@@ -93,57 +93,43 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                   break;
 
                case 'mode':
-                  if(pin>=2 && pin<=13){
-                     if(mode === 'input' || mode ==='output'){
-                        session.publish(topic_command, [board, command, pin, mode]);
-                        res.json(pin+':'+mode);
-                        break;
-                     }
-                     else{
-                        res.json('null');
-                        break;   
-                     }
+                  
+                  if(mode === 'input' || mode ==='output'){
+                     session.publish(topic_command, [board, command, pin, mode]);
+                     res.json(pin+':'+mode);
+                     break;
+                  }
+                  else{
+                     res.json('null');
+                     break;   
+                  }
+               
+               //Analog Write
+               case 'analog':
+                  
+                  if(value<=0 && value <=1024){
+                     session.publish(topic_command, [board, command+'write', pin, value]);
+                     res.json(pin+':'+value);
+                     break;
                   }
                   else{
                      res.json('null');
                      break;
                   }
-
-               //Analog Write
-               case 'analog':
-                  if(pin>=2 && pin<=13){
-                     if(value<=0 && value <=1024){
-                        session.publish(topic_command, [board, command+'write', pin, value]);
-                        res.json(pin+':'+value);
-                        break;
-                     }
-                     else{
-                        res.json('null');
-                        break;
-                     }
-                  }
-                  else{
-                     res.json('null');
-                     break;  
-                  }
+               
                //Analog Write
                case 'digital':
-                  if(pin>=2 && pin<=13){
-                     if(value==0 || value==1){
-                        session.publish(topic_command, [board, command+'write', pin, value]);
-                        res.json(pin+':'+value);
-                        break;
-                     }
-                     else{
-                        res.json('null');
-                        break;
-                     }
-                   }
+                  
+                  if(value==0 || value==1){
+                     session.publish(topic_command, [board, command+'write', pin, value]);
+                     res.json(pin+':'+value);
+                     break;
+                  }
                   else{
                      res.json('null');
-                     break;  
+                     break;
                   }
-
+                  
                default:
                   res.json('null')
                   break;
