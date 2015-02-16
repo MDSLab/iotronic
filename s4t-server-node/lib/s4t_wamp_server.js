@@ -127,7 +127,6 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                         }
                      );
                      //session.publish(topic_command, [board, command, pin]);   
-                     
                      break;
                   }
                
@@ -151,7 +150,9 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                      session.call('command.rpc.read.digital', [board, command, pin]).then(
                         function(result){
                           res.json(result);
+                          
                         }
+                     );
                      break;
                   }
 
