@@ -63,7 +63,7 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
    		var command = req.query.command;
          var pin = req.query.pin;
          var mode = req.query.mode;
-         var value = req.query.value;
+         var value = req.query.val;
 
    		if(boards[board] != undefined){
    			//DEBUG Message
@@ -106,7 +106,9 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                
                //Analog
                case 'analog':
+                  cosole.log('VALORE='+value);
                   if(value!=undefined){//WRITE
+                     console.log('ANALOG WRITE');
                      if(value<=0 && value <=1024){
                         session.publish(topic_command, [board, command+'write', pin, value]);
                         res.json(pin+':'+value);
@@ -118,6 +120,7 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                      }
                   }
                   else{//READ 
+                     console.log('ANALOG WRITE');
                      session.publish(topic_command, [board, command+'read', pin]);   
                      res.json(pin);
                      break;
@@ -125,7 +128,9 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                
                //Digital
                case 'digital':
+                  cosole.log('VALORE='+value);
                   if(value!=undefined){//WRITE
+                     console.log('DIGITAL WRITE');
                      if(value==0 || value==1){//WRITE
                         session.publish(topic_command, [board, command+'write', pin, value]);
                         res.json(pin+':'+value);
@@ -137,6 +142,7 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                      }
                   }
                   else{//READ
+                     console.log('DIGITAL READ');
                      session.publish(topic_command, [board, command+'read', pin]);   
                      res.json(pin);
                      break;
