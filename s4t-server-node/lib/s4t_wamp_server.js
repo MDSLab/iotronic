@@ -121,7 +121,7 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                   }
                   else{//READ 
                      console.log('ANALOG READ');
-                     session.call('command.rpc.read.analog', [board, command, pin]).then(
+                     session.call(board+'.command.rpc.read.analog', [board, command, pin]).then(
                         function(result){
                            res.json(result);
                         },session.log);
@@ -145,7 +145,7 @@ s4t_wamp_server.prototype.start = function(restPort, wamp_router_url){
                   }
                   else{//READ
                      console.log('DIGITAL READ');
-                     session.call('command.rpc.read.digital', [board, command, pin]).then(
+                     session.call(board+'.command.rpc.read.digital', [board, command, pin]).then(
                         function(result){
                            res.json(result);
                         },session.log);
