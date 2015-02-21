@@ -27,10 +27,29 @@ from autobahn.twisted.wamp import ApplicationSession
 from autobahn.twisted.wamp import ApplicationRunner
 from twisted.internet.defer import inlineCallbacks
 
-urlWampRouter = "ws://172.17.3.139:8181/ws"
+from autobahn.twisted.websocket import WampWebSocketClientFactory
+from autobahn.wamp.types import ComponentConfig
+
+urlWampRouter = "ws://212.189.207.109:8181/ws"
 realmWampRouter = "s4t"
 
+'''
+class ApplicationSessionFactory(ApplicationSessionFactory):
+	def __init__(self, config, app):
+		ApplicationSession.__init__(self, config)
+		self.app = app
+
+class ApplicationFactory(Application):
+
+
+	def __init__(self, prefix= None):
+
+'''
+
 class S4TWampServer(ApplicationSession):
+
+	
+
 
 	@inlineCallbacks
 	def onJoin(self, details):
@@ -69,11 +88,49 @@ class s4_wamp_server:
 		self.topic_connection = t_connection
 		self.topic_command = t_command
 				
-	def start(self):		
-		self.runner = ApplicationRunner(url = urlWampRouter, realm = realmWampRouter, extra={'topic_connection':self.topic_connection, 'topic_command':self.topic_command})	
-		self.runner.run(S4TWampServer)
+	def start(self,make):		
+		#self.runner = ApplicationRunner(url = urlWampRouter, realm = realmWampRouter, extra={'topic_connection':self.topic_connection, 'topic_command':self.topic_command})	
+		#self.runner.run(S4TWampServer)
+		self.url = urlWampRouter
+		self.realm = realmWampRouter
+		self.extra = {'topic_connection':self.topic_connection, 'topic_command':self.topic_command}
+		self.debug = True
+		self.debug_wamp = True
+		self.debug_app = True
+		self.make = None
+
+		from twisted.internet import reactor
+		## factory for use ApplicationSession
+		def create():
+			cfg = ComponentConfig(self.realm, self.extra)
+			try:
+				session = make(cfg)
+			except Exception:
+				## the app component could not be created .. fatal
+				log.err()
+				reactor.stop()
+			else:
+				session.debug_app = self.debug_app
+				return session
+
+		## create a WAMP-over-WebSocket transport client factory
+		transport_factory = WampWebSocketClientFactory(create, url = self.url,
+			debug = self.debug, debug_wamp = self.debug_wamp)
+
+		## start the client from a Twisted endpoint
+		from twisted.internet.endpoints import clientFromString
+
+ 		endpoint_descriptor = "tcp:212.189.207.109:8181"
+
+		client = clientFromString(reactor, endpoint_descriptor)
+		client.connect(transport_factory)
+
+		## now enter the Twisted reactor loop
+		
+ 		reactor.run()
+
 
 if __name__ == '__main__':
 
 	server = s4_wamp_server('board.connection', 'board.command')
-	server.start()
+	server.start(S4TWampServer)

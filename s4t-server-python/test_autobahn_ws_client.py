@@ -46,7 +46,7 @@ class BaseWBClient(object):
         
         log.msg("Connecting to 172.17.3.139:8282")
         self.factory = _WebSocketClientFactory(
-                                "ws://172.17.3.139:8181/ws",
+                                "ws://172.17.3.139:8282",
                                 debug=True)
         self.factory.base_client = self
         
@@ -96,8 +96,8 @@ if __name__ == '__main__':
     client = BaseWBClient(ws_setting)
 
     t1 = threading.Thread(client.connect())
-    #t11 = threading.Thread(Ppippo(client))
-    #t11.start()
+    t11 = threading.Thread(Ppippo(client))
+    t11.start()
     t1.start()
 
     #client.connect()

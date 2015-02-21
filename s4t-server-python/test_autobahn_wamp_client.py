@@ -1,16 +1,53 @@
+from autobahn.twisted.websocket import WampWebSocketClientFactory
+from autobahn.twisted.websocket import WampWebSocketClientProtocol
+
 from autobahn.twisted.websocket import WebSocketClientProtocol
 from autobahn.twisted.websocket import WebSocketClientFactory
 from autobahn.twisted.websocket import connectWS
 
+from autobahn.twisted.wamp import ApplicationSessionFactory
+
 from twisted.internet import reactor
 
-from twisted.python import log
-import sys
-log.startLogging(sys.stdout)
+#from twisted.python import log
+#import sys
+#log.startLogging(sys.stdout)
 import threading
 import Queue
 
 # ----- twisted ----------
+class MyAppComponent(ApplicationSession):
+
+    def onJoin(self, details):
+        if not self.factory._myAppSession:
+            self.factory._myAppSession = self
+
+def onLeave(self, details):
+    if self.factory._myAppSession == self:
+        self.factory._myAppSession = None
+
+#-------------------------------------------------------
+class _WampClientProtocol(WampWebSocketClientProtocol):
+    def __init__(self, factory):
+        self.factory = factory
+
+    def onOpen(self):
+        #log.msg("Client connected")
+        self.factory.protocol_instance = self
+        self.factory.base_client._connected_event.set()
+#--------------------------------------------------------
+
+class _WampClientFactory(WampWebSocketClientFactory):
+    def __init__(self, factory, *args, **kwargs):
+        WampWebSocketClientFactory.__init__(self, factory, *args, **kwargs)
+        self.protocol_instance = None
+        self.base_client = None
+
+    def buildProtocol(self, addr):
+        return _WampClientProtocol(self)
+#------------------------------------------------------------
+
+'''
 class _WebSocketClientProtocol(WebSocketClientProtocol):
     def __init__(self, factory):
         self.factory = factory
@@ -28,6 +65,7 @@ class _WebSocketClientFactory(WebSocketClientFactory):
 
     def buildProtocol(self, addr):
         return _WebSocketClientProtocol(self)
+'''
 # ------ end twisted -------
 
 class BaseWBClient(object):
@@ -42,12 +80,14 @@ class BaseWBClient(object):
         self._send_queue = Queue.Queue()
         self._reactor_thread = None
 
+        self.session_factory = ApplicationSessionFactory()
+
     def connect(self):
-        
-        log.msg("Connecting to 172.17.3.139:8282")
-        self.factory = _WebSocketClientFactory(
-                                "ws://172.17.3.139:8181",
-                                debug=True)
+
+        #log.msg("Connecting to 172.17.3.139:8181")
+        self.factory = _WampClientFactory(self.session_factory,
+                                "ws://172.17.3.139:8181/ws",
+                                debug_wamp=True)
         self.factory.base_client = self
         
         c = connectWS(self.factory)
@@ -60,19 +100,19 @@ class BaseWBClient(object):
     def send_message(self, body):
         if not self._check_connection():
             return
-        log.msg("Queing send")
+        #log.msg("Queing send")
         self._send_queue.put(body)
         reactor.callFromThread(self._dispatch)
 
     def _check_connection(self):
         if not self._connected_event.wait(timeout=10):
-            log.err("Unable to connect to server")
+            #log.err("Unable to connect to server")
             self.close()
             return False
         return True
 
     def _dispatch(self):
-        log.msg("Dispatching")
+        #log.msg("Dispatching")
         while True:
             try:
                 body = self._send_queue.get(block=False)
@@ -96,8 +136,8 @@ if __name__ == '__main__':
     client = BaseWBClient(ws_setting)
 
     t1 = threading.Thread(client.connect())
-    t11 = threading.Thread(Ppippo(client))
-    t11.start()
+    #t11 = threading.Thread(Ppippo(client))
+    #t11.start()
     t1.start()
 
     #client.connect()

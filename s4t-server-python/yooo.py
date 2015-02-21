@@ -1,8 +1,5 @@
-from autobahn.twisted.websocket import WampWebSocketClientFactory
 from autobahn.twisted.websocket import WampWebSocketClientProtocol
-
-from autobahn.twisted.websocket import WebSocketClientProtocol
-from autobahn.twisted.websocket import WebSocketClientFactory
+from autobahn.twisted.websocket import WampWebSocketClientFactory
 from autobahn.twisted.websocket import connectWS
 
 from twisted.internet import reactor
@@ -14,29 +11,7 @@ import threading
 import Queue
 
 # ----- twisted ----------
-#-------------------------------------------------------
-class _WampClientProtocol(WampWebSocketClientProtocol):
-    def __init__(self, factory):
-        self.factory = factory
-
-    def onOpen(self):
-        log.msg("Client connected")
-        self.factory.protocol_instance = self
-        self.factory.base_client._connected_event.set()
-#--------------------------------------------------------
-
-class _WampClientFactory(WampWebSocketClientFactory):
-    def __init__(self, *args, **kwargs):
-        WampWebSocketClientFactory.__init__(self, *args, **kwargs)
-        self.protocol_instance = None
-        self.base_client = None
-
-    def buildProtocol(self, addr):
-        return _WampClientProtocol(self)
-#------------------------------------------------------------
-
-
-class _WebSocketClientProtocol(WebSocketClientProtocol):
+class _WampWebSocketClientProtocol(WampWebSocketClientProtocol):
     def __init__(self, factory):
         self.factory = factory
 
@@ -45,14 +20,14 @@ class _WebSocketClientProtocol(WebSocketClientProtocol):
         self.factory.protocol_instance = self
         self.factory.base_client._connected_event.set()
 
-class _WebSocketClientFactory(WebSocketClientFactory):
-    def __init__(self, *args, **kwargs):
-        WebSocketClientFactory.__init__(self, *args, **kwargs)
+class _WampWebSocketClientFactory(WampWebSocketClientFactory):
+    def __init__(self, factory, *args, **kwargs):
+        WampWebSocketClientFactory.__init__(self, factory, *args, **kwargs)
         self.protocol_instance = None
         self.base_client = None
 
     def buildProtocol(self, addr):
-        return _WebSocketClientProtocol(self)
+        return _WampWebSocketClientProtocol(self)
 # ------ end twisted -------
 
 class BaseWBClient(object):
@@ -70,9 +45,9 @@ class BaseWBClient(object):
     def connect(self):
         
         log.msg("Connecting to 172.17.3.139:8282")
-        self.factory = _WampClientFactory(
-                                "ws://172.17.3.139:8181",
-                                debug_wamp=True)
+        self.factory = _WebSocketClientFactory(
+                                "ws://172.17.3.139:8282",
+                                debug=True)
         self.factory.base_client = self
         
         c = connectWS(self.factory)
@@ -124,9 +99,3 @@ if __name__ == '__main__':
     t11 = threading.Thread(Ppippo(client))
     t11.start()
     t1.start()
-
-    #client.connect()
-    #client.send_message('pippo')
-
-    
-    
