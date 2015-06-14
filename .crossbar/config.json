@@ -1,4 +1,3 @@
-
 {
    "controller": {
    },
@@ -26,20 +25,17 @@
          ],
          "transports": [
             {
-               "type": "web",
+               "type": "websocket",
                "endpoint": {
                   "type": "tcp",
                   "port": 8181
                },
-               "paths": {
-                  "/": {
-                     "type": "static",
-                     "directory": ".."
-                  },
-                  "ws": {
-                     "type": "websocket"
-                  }
-               }
+                "options":{
+                        "fail_by_drop": true,
+                        "auto_ping_interval": 10000,
+                        "auto_ping_timeout": 5000,
+                        "auto_ping_size": 4
+                }
             }
          ]
       }
