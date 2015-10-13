@@ -13,17 +13,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-'''
 from iotronic.api import app
 from iotronic.common import service
-
 from oslo import i18n
-#from oslo_config import cfg
-#cfg.CONF(project='iotronic')
-
 
 i18n.install('iotronic')
 service.prepare_service([])
 
 application = app.VersionSelectorApplication()
-'''
