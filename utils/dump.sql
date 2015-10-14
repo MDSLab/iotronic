@@ -31,9 +31,8 @@ CREATE TABLE `boards` (
   `updated_at` datetime DEFAULT NULL,
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `uuid` varchar(36) NOT NULL,
-  `name` varchar(50) DEFAULT NULL,
-  `status` varchar(10) DEFAULT NULL,
-  `reservation` varchar(255) DEFAULT NULL,
+  `code` varchar(25) DEFAULT NULL,
+  `status` varchar(15) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uuid` (`uuid`)
 ) ENGINE=InnoDB AUTO_INCREMENT=127 DEFAULT CHARSET=utf8;

@@ -17,7 +17,7 @@ class Board(base.APIBase):
     """
 
     uuid = types.uuid
-    name = wsme.wsattr(wtypes.text)
+    code = wsme.wsattr(int)
     status = wsme.wsattr(wtypes.text)
 
     @staticmethod
@@ -226,9 +226,10 @@ class BoardsController(rest.RestController):
         'updated_at': None, 
         'reservation': None, 'id': 106, 'name': u'provaaaa'}
         """
-        b="{'status': '1', 'uuid': 'a9a86ab8-ad45-455e-86c3-d8f7d892ec9d', 'name': 'provaaaa'}"
-        board = Board(**b.as_dict())
-        board.uuid = uuidutils.generate_uuid()
+
+        uuid = uuidutils.generate_uuid()
+        b={'status': 'DISCONNECTED', 'uuid': uuid, 'code':'11223344'}
+        board = Board(**b)
         
         new_Board = objects.Board(pecan.request.context,
                                 **board.as_dict())

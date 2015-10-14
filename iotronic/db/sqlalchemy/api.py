@@ -739,3 +739,24 @@ class Connection(api.Connection):
                     board=values['uuid'])
             raise exception.BoardAlreadyExists(uuid=values['uuid'])
         return board
+    
+    def get_boardinfo_list(self, columns=None, filters=None, limit=None,
+                          marker=None, sort_key=None, sort_dir=None):
+        # list-ify columns default values because it is bad form
+        # to include a mutable list in function definitions.
+        if columns is None:
+            columns = [models.Board.id]
+        else:
+            columns = [getattr(models.Board, c) for c in columns]
+
+        query = model_query(*columns, base_model=models.Board)
+        query = self._add_boards_filters(query, filters)
+        return _paginate_query(models.Board, limit, marker,
+                               sort_key, sort_dir, query)
+
+    def get_board_list(self, filters=None, limit=None, marker=None,
+                      sort_key=None, sort_dir=None):
+        query = model_query(models.Board)
+        query = self._add_boards_filters(query, filters)
+        return _paginate_query(models.Board, limit, marker,
+                               sort_key, sort_dir, query)

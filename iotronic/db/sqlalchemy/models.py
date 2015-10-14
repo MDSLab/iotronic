@@ -224,11 +224,7 @@ class Board(Base):
     '''
     id = Column(Integer, primary_key=True)
     uuid = Column(String(36))
-    # NOTE(deva): we store instance_uuid directly on the node so that we can
-    #             filter on it more efficiently, even though it is
-    #             user-settable, and would otherwise be in node.properties.
-    uuid = Column(String(36), nullable=True)
-    name = Column(String(255), nullable=True)
-    status = Column(String(10), nullable=True)
-    reservation = Column(String(255), nullable=True)
+    code = Column(String(25))
+    status = Column(String(15), nullable=True)
+    #reservation = Column(String(255), nullable=True)
 

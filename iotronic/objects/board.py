@@ -31,10 +31,9 @@ class Board(base.IotronicObject):
     fields = {
         'id': int,
         'uuid': obj_utils.str_or_none,
-        'name': obj_utils.str_or_none,
+        'code': obj_utils.str_or_none,
         'status': obj_utils.str_or_none,
-        'reservation': obj_utils.str_or_none,
-    
+        #'reservation': obj_utils.str_or_none,
     }
 
     @staticmethod

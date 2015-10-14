@@ -29,6 +29,9 @@ from iotronic.common import rpc
 from iotronic.conductor import manager
 from iotronic.objects import base as objects_base
 
+from oslo_log import log as logging
+LOG = logging.getLogger('object')
+
 
 class ConductorAPI(object):
     """Client side of the conductor RPC API.

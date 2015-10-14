@@ -486,3 +486,57 @@ class Connection(object):
                         }
         :returns: A board.
         """
+
+    @abc.abstractmethod
+    def get_boardinfo_list(self, columns=None, filters=None, limit=None,
+                          marker=None, sort_key=None, sort_dir=None):
+        """Get specific columns for matching boards.
+
+        Return a list of the specified columns for all boards that match the
+        specified filters.
+
+        :param columns: List of column names to return.
+                        Defaults to 'id' column when columns == None.
+        :param filters: Filters to apply. Defaults to None.
+
+                        :associated: True | False
+                        :reserved: True | False
+                        :maintenance: True | False
+                        :chassis_uuid: uuid of chassis
+                        :driver: driver's name
+                        :provision_state: provision state of board
+                        :provisioned_before:
+                            boards with provision_updated_at field before this
+                            interval in seconds
+        :param limit: Maximum number of boards to return.
+        :param marker: the last item of the previous page; we return the next
+                       result set.
+        :param sort_key: Attribute by which results should be sorted.
+        :param sort_dir: direction in which results should be sorted.
+                         (asc, desc)
+        :returns: A list of tuples of the specified columns.
+        """
+
+    @abc.abstractmethod
+    def get_board_list(self, filters=None, limit=None, marker=None,
+                      sort_key=None, sort_dir=None):
+        """Return a list of boards.
+
+        :param filters: Filters to apply. Defaults to None.
+
+                        :associated: True | False
+                        :reserved: True | False
+                        :maintenance: True | False
+                        :chassis_uuid: uuid of chassis
+                        :driver: driver's name
+                        :provision_state: provision state of board
+                        :provisioned_before:
+                            boards with provision_updated_at field before this
+                            interval in seconds
+        :param limit: Maximum number of boards to return.
+        :param marker: the last item of the previous page; we return the next
+                       result set.
+        :param sort_key: Attribute by which results should be sorted.
+        :param sort_dir: direction in which results should be sorted.
+                         (asc, desc)
+        """

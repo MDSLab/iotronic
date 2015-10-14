@@ -59,7 +59,7 @@ from iotronic.common import swift
 from iotronic.iotconductor import task_manager
 from iotronic.iotconductor import utils
 
-from iotronic import objects
+
 from iotronic.openstack.common import periodic_task
 '''
 
@@ -78,6 +78,7 @@ import oslo_messaging as messaging
 from oslo_utils import excutils
 from oslo_utils import uuidutils
 from iotronic.conductor import utils
+from iotronic import objects
 
 from iotronic.common import hash_ring as hash
 from iotronic.common.i18n import _
@@ -629,6 +630,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
             host = CONF.host
         self.host = host
         self.topic = topic
+        self.drivers = ['fake']
         #self.power_state_sync_count = collections.defaultdict(int)
         #self.notifier = rpc.get_notifier()
     '''
@@ -685,7 +687,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
                     self._collect_periodic_tasks(iface)
         '''
         # clear all locks held by this conductor before registering
-        self.dbapi.clear_node_reservations_for_conductor(self.host)
+        #self.dbapi.clear_node_reservations_for_conductor(self.host)
         try:
             # Register this conductor with the cluster
             cdr = self.dbapi.register_conductor({'hostname': self.host,'drivers': ['fake']})
@@ -695,6 +697,8 @@ class ConductorManager(periodic_task.PeriodicTasks):
             LOG.warn(_LW("A conductor with hostname %(hostname)s "
                          "was previously registered. Updating registration"),
                      {'hostname': self.host})
+            
+            #TO BE CHANGED
             cdr = self.dbapi.register_conductor({'hostname': self.host,
                                                  'drivers': self.drivers},
                                                 update_existing=True)
@@ -1432,8 +1436,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
                         action=action, node=task.node.uuid,
                         state=task.node.provision_state)
 
-    @periodic_task.periodic_task(
-        spacing=CONF.conductor.sync_power_state_interval)
+    #@periodic_task.periodic_task(spacing=CONF.conductor.sync_power_state_interval)
     def _sync_power_states(self, context):
         """Periodic task to sync power states for the nodes.
 
@@ -1501,8 +1504,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
                 # Yield on every iteration
                 eventlet.sleep(0)
 
-    @periodic_task.periodic_task(
-        spacing=CONF.conductor.check_provision_state_interval)
+    #@periodic_task.periodic_task(spacing=CONF.conductor.check_provision_state_interval)
     def _check_deploy_timeouts(self, context):
         """Periodically checks whether a deploy RPC call has timed out.
 
@@ -1542,8 +1544,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
         task.node.conductor_affinity = self.conductor.id
         task.node.save()
 
-    @periodic_task.periodic_task(
-        spacing=CONF.conductor.sync_local_state_interval)
+    #@periodic_task.periodic_task(spacing=CONF.conductor.sync_local_state_interval)
     def _sync_local_state(self, context):
         """Perform any actions necessary to sync local state.
 
@@ -1617,7 +1618,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
                        nodes
         :return: generator yielding tuples of requested fields
         """
-        columns = ['uuid', 'driver'] + list(fields or ())
+        columns = ['uuid',] + list(fields or ())
         node_list = self.dbapi.get_nodeinfo_list(columns=columns, **kwargs)
         for result in node_list:
             if self._mapped_to_this_conductor(*result[:2]):
@@ -1905,8 +1906,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
         driver = self._get_driver(driver_name)
         return driver.get_properties()
 
-    @periodic_task.periodic_task(
-        spacing=CONF.conductor.send_sensor_data_interval)
+    #@periodic_task.periodic_task(spacing=CONF.conductor.send_sensor_data_interval)
     def _send_sensor_data(self, context):
         """Periodically sends sensor data to Ceilometer."""
         # do nothing if send_sensor_data option is False
@@ -2130,8 +2130,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
                     action='inspect', node=task.node.uuid,
                     state=task.node.provision_state)
 
-    @periodic_task.periodic_task(
-        spacing=CONF.conductor.check_provision_state_interval)
+    #@periodic_task.periodic_task(spacing=CONF.conductor.check_provision_state_interval)
     def _check_inspect_timeouts(self, context):
         """Periodically checks inspect_timeout and fails upon reaching it.
 
@@ -2179,12 +2178,12 @@ class ConductorManager(periodic_task.PeriodicTasks):
         :param: last_error: the error message to be updated in node.last_error
 
         """
-        node_iter = self.iter_nodes(filters=filters,
+        node_iter = self.iter_boards(filters=filters,
                                     sort_key=sort_key,
                                     sort_dir='asc')
 
         workers_count = 0
-        for node_uuid, driver in node_iter:
+        for node_uuid in node_iter:
             try:
                 with task_manager.acquire(context, node_uuid) as task:
                     if (task.node.maintenance or
@@ -2224,11 +2223,12 @@ class ConductorManager(periodic_task.PeriodicTasks):
             state to perform deletion.
 
         """
-        with task_manager.acquire(context, board_id) as task:
-            board = task.board
-            board.destroy()
-            LOG.info(_LI('Successfully deleted board %(board)s.'),
-                     {'board': board.uuid})
+        #with task_manager.acquire(context, board_id) as task:
+            #board = task.board
+        board = objects.Board.get(context, board_id)
+        board.destroy()
+        LOG.info(_LI('Successfully deleted board %(board)s.'),
+                 {'board': board.uuid})
             #if board.instance_uuid is not None:
             #    raise exception.BoardAssociated(board=board.uuid,
             #                                   instance=board.instance_uuid)
@@ -2245,25 +2245,45 @@ class ConductorManager(periodic_task.PeriodicTasks):
             # INSPECTIONFAIL -> MANAGEABLE
             # DEPLOYFAIL -> DELETING
             # ZAPFAIL -> MANAGEABLE (in the future)
-            '''
-            valid_states = (states.AVAILABLE, states.NOSTATE,
-                            states.MANAGEABLE)
-            if board.provision_state not in valid_states:
-                msg = (_('Can not delete board "%(board)s" while it is in '
-                         'provision state "%(state)s". Valid provision states '
-                         'to perform deletion are: "%(valid_states)s"') %
-                       {'board': board.uuid, 'state': board.provision_state,
-                        'valid_states': valid_states})
-                raise exception.InvalidState(msg)
-            if board.console_enabled:
-                try:
-                    task.driver.console.stop_console(task)
-                except Exception as err:
-                    LOG.error(_LE('Failed to stop console while deleting '
-                                  'the board %(board)s: %(err)s.'),
-                              {'board': board.uuid, 'err': err})
-            board.destroy()
-            LOG.info(_LI('Successfully deleted board %(board)s.'),
-                     {'board': board.uuid})
-            '''
+        '''
+        valid_states = (states.AVAILABLE, states.NOSTATE,
+                        states.MANAGEABLE)
+        if board.provision_state not in valid_states:
+            msg = (_('Can not delete board "%(board)s" while it is in '
+                     'provision state "%(state)s". Valid provision states '
+                     'to perform deletion are: "%(valid_states)s"') %
+                   {'board': board.uuid, 'state': board.provision_state,
+                    'valid_states': valid_states})
+            raise exception.InvalidState(msg)
+        if board.console_enabled:
+            try:
+                task.driver.console.stop_console(task)
+            except Exception as err:
+                LOG.error(_LE('Failed to stop console while deleting '
+                              'the board %(board)s: %(err)s.'),
+                          {'board': board.uuid, 'err': err})
+        board.destroy()
+        LOG.info(_LI('Successfully deleted board %(board)s.'),
+                 {'board': board.uuid})
+        '''
+            
+    def iter_boards(self, fields=None, **kwargs):
+        """Iterate over boards mapped to this conductor.
 
+        Requests board set from and filters out boards that are not
+        mapped to this conductor.
+
+        Yields tuples (board_uuid, driver, ...) where ... is derived from
+        fields argument, e.g.: fields=None means yielding ('uuid', 'driver'),
+        fields=['foo'] means yielding ('uuid', 'driver', 'foo').
+
+        :param fields: list of fields to fetch in addition to uuid and driver
+        :param kwargs: additional arguments to pass to dbapi when looking for
+                       boards
+        :return: generator yielding tuples of requested fields
+        """
+        columns = ['uuid',] + list(fields or ())
+        board_list = self.dbapi.get_boardinfo_list(columns=columns, **kwargs)
+        for result in board_list:
+            if self._mapped_to_this_conductor(*result[:2]):
+                yield result
