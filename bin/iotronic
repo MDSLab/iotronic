@@ -1,0 +1,23 @@
+#!/bin/bash
+
+HOST='localhost'
+PORT='1288'
+VERSION='v1'
+BASE=http://$HOST:$PORT/$VERSION
+
+if [ $# -lt 1 ]
+then
+echo "list - create-board - delete-board - show"
+fi
+
+case "$1" in
+
+list) curl $BASE/boards/
+;;
+create-board) curl -X POST $BASE/boards/
+;;
+delete-board) curl -X DELETE $BASE/boards/$2
+;;
+show) curl $BASE/boards/$2
+;;
+esac

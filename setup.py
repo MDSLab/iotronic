@@ -63,6 +63,7 @@ setup(
 	
 	data_files=[
 		('/usr/bin', ['bin/iotronic-conductor']),
+		('/usr/bin', ['bin/iotronic']),
     ],
     
 	
