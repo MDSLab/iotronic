@@ -17,7 +17,7 @@ class Board(base.APIBase):
     """
 
     uuid = types.uuid
-    code = wsme.wsattr(int)
+    code = wsme.wsattr(wtypes.text)
     status = wsme.wsattr(wtypes.text)
 
     @staticmethod
@@ -190,49 +190,19 @@ class BoardsController(rest.RestController):
         
     #@expose.expose(Board, body=Board, status_code=201)
     #def post(self, Board):
-    @expose.expose(Board, status_code=201)
-    def post(self):
+    @expose.expose(Board, body=Board, status_code=201)
+    def post(self,Board):
         """Create a new Board.
 
         :param Board: a Board within the request body.
         """
-        '''
+        
         if not Board.uuid:
             Board.uuid = uuidutils.generate_uuid()
-
-        try:
-            pecan.request.rpcapi.get_topic_for(Board)
-        except exception.NoValidHost as e:
-            e.code = 400
-            raise e
-
-        if Board.name:
-            if not api_utils.allow_Board_logical_names():
-                raise exception.NotAcceptable()
-            if not api_utils.is_valid_Board_name(Board.name):
-                msg = _("Cannot create Board with invalid name %(name)s")
-                raise wsme.exc.ClientSideError(msg % {'name': Board.name},
-                                               status_code=400)
-        '''
-        #new_Board = objects.Board(pecan.request.context,
-        #                        **Board.as_dict())
-        
-        #new_Board = objects.Board(pecan.request.context,
-        #                        **Board.as_dict())
-        #rpc_board = api_utils.get_rpc_board('a9a86ab8-ad45-455e-86c3-d8f7d892ec9d')
-        
-        """{'status': u'1', 'uuid': u'a9a86ab8-ad45-455e-86c3-d8f7d892ec9d', 
-        'created_at': datetime.datetime(2015, 1, 30, 16, 56, tzinfo=<iso8601.iso8601.Utc object at 0x7f5b81e0dd90>), 
-        'updated_at': None, 
-        'reservation': None, 'id': 106, 'name': u'provaaaa'}
-        """
-
-        uuid = uuidutils.generate_uuid()
-        b={'status': 'DISCONNECTED', 'uuid': uuid, 'code':'11223344'}
-        board = Board(**b)
-        
+        if not Board.status:
+            Board.status = 'DISCONNECTED'
         new_Board = objects.Board(pecan.request.context,
-                                **board.as_dict())
+                                **Board.as_dict())
         new_Board.create()
         #pecan.response.location = link.build_url('Boards', new_Board.uuid)
         return Board.convert_with_links(new_Board)
