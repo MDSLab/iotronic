@@ -13,11 +13,16 @@ fi
 case "$1" in
 
 list) curl $BASE/boards/
+echo "";
 ;;
 create-board) curl -H "Content-Type: application/json" -X POST $BASE/boards/ -d '{"code":"'"$2"'"}'
+echo "";
 ;;
 delete-board) curl -X DELETE $BASE/boards/$2
+echo "";
 ;;
 show) curl $BASE/boards/$2
+echo "";
 ;;
+*) echo "list - create-board - delete-board - show"
 esac
