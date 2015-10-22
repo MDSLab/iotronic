@@ -1,8 +1,10 @@
-from clientwamp import ClientWamp
+from iotronic.wamp.clientwamp import ClientWamp
 from sys import stdin
+import inspect
 
 c=ClientWamp('localhost','8181','s4t')
-c.send('Hello!')
+c.send('board.connection','Hello from the chat wamp!')
+print 'USING',inspect.getfile(c.__class__)
 while True:
     userinput = stdin.readline()
-    c.send(str(userinput))
+    c.send('board.connection',str(userinput))
