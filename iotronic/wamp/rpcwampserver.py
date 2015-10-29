@@ -8,7 +8,9 @@ class RPCWampManager(ApplicationSession):
     def __init__(self, config=None):
         ApplicationSession.__init__(self, config)
         print("component created")
-
+        
+    '''
+    #unused methods
     def onConnect(self):
         print("transport connected")
         self.join(self.config.realm)
@@ -23,23 +25,16 @@ class RPCWampManager(ApplicationSession):
 
     def onDisconnect(self):
         print("transport disconnected")
+    '''
     
     @inlineCallbacks
     def onJoin(self, details):
         print("session ready")
-
-        def add2(x, y):
-            return x + y
-        
-        def test():
-            return u'hello!'
-        
-        def registration(board,session):
-            return u'registred board'
-
+        import iotronic.wamp.functions as fun
         try:
-            yield self.register(test, u'stack4things.conductor.rpc.test')
-            yield self.register(registration, u'stack4things.conductor.rpc.registration')
+            yield self.register(fun.test, u'stack4things.conductor.rpc.test')
+            yield self.register(fun.registration, u'stack4things.conductor.rpc.registration')
+            
             print("procedure registered")
         except Exception as e:
             print("could not register procedure: {0}".format(e))
