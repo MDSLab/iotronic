@@ -3,7 +3,6 @@ from autobahn.twisted.wamp import ApplicationSession
 from twisted.internet.defer import inlineCallbacks
 import multiprocessing
 from autobahn.twisted.util import sleep
-from iotronic.wamp.parser import Parser
 
 msg_queue=None
     
@@ -18,11 +17,9 @@ class Subscriber(ApplicationSession):
     def onJoin(self, details):
         print("Subscriber session ready")
         self.topic_reader = self.config.extra['topic']
-        self.parser=Parser()
 
         def manage_msg(*args):
-            self.parser.print_msg(*args)
-            self.parser.parse(*args)
+            print args
 
         try:
             yield self.subscribe(manage_msg, self.topic_reader)
