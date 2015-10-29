@@ -1,10 +1,18 @@
-def add2(x, y):
-    return x + y
+from iotronic import objects
+from oslo_utils import uuidutils
+import pecan
 
 def test():
     return u'hello!'
 
-def registration(board,session):
-    print board,session
-    response='registred board '+str(board)
+def registration(code,session):
+    new_Board = objects.Board({})
+    new_Board.uuid=uuidutils.generate_uuid()
+    new_Board.code=str(code)
+    new_Board.status='CONNECTED'
+    
+    new_Board.create()
+
+    print Board
+    response='registred board '+str(Board)
     return unicode(response)
