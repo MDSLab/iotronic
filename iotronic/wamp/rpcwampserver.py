@@ -10,7 +10,7 @@ class RPCWampManager(ApplicationSession):
     
     def __init__(self, config=None):
         ApplicationSession.__init__(self, config)
-        LOG.info("component created")
+        LOG.info("RPC wamp manager created")
         
     '''
     #unused methods
@@ -32,13 +32,13 @@ class RPCWampManager(ApplicationSession):
     
     @inlineCallbacks
     def onJoin(self, details):
-        LOG.info('session ready')
+        LOG.info('RPC Wamp Session ready')
         import iotronic.wamp.functions as fun
         try:
             yield self.register(fun.test, u'stack4things.conductor.rpc.test')
             yield self.register(fun.registration, u'stack4things.conductor.rpc.registration')
             
-            LOG.info("procedure registered")
+            LOG.info("Procedures registered")
         except Exception as e:
             print("could not register procedure: {0}".format(e))
             
@@ -62,7 +62,7 @@ class RPC_Wamp_Server:
     def __init__(self,ip,port,realm):
         server = RPCWampServer(ip,port,realm)
         server.start()
-        multi = multiprocessing.Process(target=reactor.run, name='reactor',args=())
+        multi = multiprocessing.Process(target=reactor.run,args=())
         multi.start()
         
 
