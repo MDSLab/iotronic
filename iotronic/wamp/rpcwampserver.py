@@ -2,12 +2,15 @@ from twisted.internet.defer import inlineCallbacks
 from autobahn.twisted.wamp import ApplicationSession, ApplicationRunner
 import multiprocessing
 from twisted.internet import reactor
+from oslo_log import log
+
+LOG = log.getLogger(__name__)
 
 class RPCWampManager(ApplicationSession):
     
     def __init__(self, config=None):
         ApplicationSession.__init__(self, config)
-        print("component created")
+        LOG.info("component created")
         
     '''
     #unused methods
@@ -29,13 +32,13 @@ class RPCWampManager(ApplicationSession):
     
     @inlineCallbacks
     def onJoin(self, details):
-        print("session ready")
+        LOG.info('session ready')
         import iotronic.wamp.functions as fun
         try:
             yield self.register(fun.test, u'stack4things.conductor.rpc.test')
             yield self.register(fun.registration, u'stack4things.conductor.rpc.registration')
             
-            print("procedure registered")
+            LOG.info("procedure registered")
         except Exception as e:
             print("could not register procedure: {0}".format(e))
             
