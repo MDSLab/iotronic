@@ -188,8 +188,6 @@ class BoardsController(rest.RestController):
         pecan.request.rpcapi.destroy_board(pecan.request.context,
                                           rpc_board.uuid, topic)
         
-    #@expose.expose(Board, body=Board, status_code=201)
-    #def post(self, Board):
     @expose.expose(Board, body=Board, status_code=201)
     def post(self,Board):
         """Create a new Board.

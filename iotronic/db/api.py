@@ -539,4 +539,36 @@ class Connection(object):
         :param sort_key: Attribute by which results should be sorted.
         :param sort_dir: direction in which results should be sorted.
                          (asc, desc)
+                         
+        """
+
+    @abc.abstractmethod
+    def get_board_by_code(self, board_code):
+        """Return a node.
+
+        :param node_name: The logical name of a node.
+        :returns: A node.
+        """
+        
+    @abc.abstractmethod
+    def update_board(self, board_id, values):
+        """Update properties of a board.
+
+        :param board_id: The id or uuid of a board.
+        :param values: Dict of values to update.
+                       May be a partial list, eg. when setting the
+                       properties for a driver. For example:
+
+                       ::
+
+                        {
+                         'driver_info':
+                             {
+                              'my-field-1': val1,
+                              'my-field-2': val2,
+                             }
+                        }
+        :returns: A board.
+        :raises: BoardAssociated
+        :raises: BoardNotFound
         """

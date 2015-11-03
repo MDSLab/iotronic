@@ -1,4 +1,5 @@
 # coding=utf-8
+from time import sleep
 
 # Copyright 2013 Hewlett-Packard Development Company, L.P.
 # Copyright 2013 International Business Machines Corporation
@@ -686,6 +687,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
                 if iface:
                     self._collect_periodic_tasks(iface)
         '''
+        
         # clear all locks held by this conductor before registering
         #self.dbapi.clear_node_reservations_for_conductor(self.host)
         try:
@@ -714,6 +716,11 @@ class ConductorManager(periodic_task.PeriodicTasks):
             with excutils.save_and_reraise_exception():
                 LOG.critical(_LC('Failed to start keepalive'))
                 self.del_host()
+        
+        from iotronic.wamp.rpcwampserver import RPC_Wamp_Server
+        c=RPC_Wamp_Server('127.0.0.1','8181','s4t')
+        
+
 
     def _collect_periodic_tasks(self, obj):
         for n, method in inspect.getmembers(obj, inspect.ismethod):
@@ -2287,3 +2294,35 @@ class ConductorManager(periodic_task.PeriodicTasks):
         for result in board_list:
             if self._mapped_to_this_conductor(*result[:2]):
                 yield result
+                
+
+    @messaging.expected_exceptions(exception.InvalidParameterValue,
+                                   exception.MissingParameterValue,
+                                   exception.BoardLocked)
+    def update_board(self, context, board_obj):
+        """Update a board with the supplied data.
+
+        This method is the main "hub" for PUT and PATCH requests in the API.
+        It ensures that the requested change is safe to perform,
+        validates the parameters with the board's driver, if necessary.
+
+        :param context: an admin context
+        :param board_obj: a changed (but not saved) board object.
+
+        """
+        board_id = board_obj.uuid
+        LOG.debug("RPC update_board called for board %s." % board_id)
+
+        # NOTE(jroll) clear maintenance_reason if board.update sets
+        # maintenance to False for backwards compatibility, for tools
+        # not using the maintenance endpoint.
+        delta = board_obj.obj_what_changed()
+        if 'maintenance' in delta and not board_obj.maintenance:
+            board_obj.maintenance_reason = None
+
+        driver_name = board_obj.driver if 'driver' in delta else None
+        with task_manager.acquire(context, board_id, shared=False,
+                                  driver_name=driver_name):
+            board_obj.save()
+
+        return board_obj

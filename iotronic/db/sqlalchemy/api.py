@@ -760,3 +760,62 @@ class Connection(api.Connection):
         query = self._add_boards_filters(query, filters)
         return _paginate_query(models.Board, limit, marker,
                                sort_key, sort_dir, query)
+        
+    def get_board_by_code(self, board_name):
+        query = model_query(models.Board).filter_by(code=board_name)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.BoardNotFound(board=board_name)
+        
+    def update_board(self, board_id, values):
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing Board.")
+            raise exception.InvalidParameterValue(err=msg)
+
+        try:
+            return self._do_update_board(board_id, values)
+        except db_exc.DBDuplicateEntry as e:
+            if 'code' in e.columns:
+                raise exception.DuplicateName(name=values['name'])
+            elif 'uuid' in e.columns:
+                raise exception.BoardAlreadyExists(uuid=values['uuid'])
+                '''
+            elif 'instance_uuid' in e.columns:
+                raise exception.InstanceAssociated(
+                    instance_uuid=values['instance_uuid'],
+                    board=board_id)
+                '''
+            else:
+                raise e
+            
+    def _do_update_board(self, board_id, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Board, session=session)
+            query = add_identity_filter(query, board_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.BoardNotFound(board=board_id)
+            '''
+            # Prevent instance_uuid overwriting
+            if values.get("instance_uuid") and ref.instance_uuid:
+                raise exception.BoardAssociated(
+                    board=board_id, instance=ref.instance_uuid)
+            
+            if 'provision_state' in values:
+                values['provision_updated_at'] = timeutils.utcnow()
+                if values['provision_state'] == states.INSPECTING:
+                    values['inspection_started_at'] = timeutils.utcnow()
+                    values['inspection_finished_at'] = None
+                elif (ref.provision_state == states.INSPECTING and
+                      values['provision_state'] == states.MANAGEABLE):
+                    values['inspection_finished_at'] = timeutils.utcnow()
+                    values['inspection_started_at'] = None
+                elif (ref.provision_state == states.INSPECTING and
+                      values['provision_state'] == states.INSPECTFAIL):
+                    values['inspection_started_at'] = None
+            '''
+            ref.update(values)
+        return ref

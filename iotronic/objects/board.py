@@ -46,7 +46,7 @@ class Board(base.IotronicObject):
 
     @base.remotable_classmethod
     def get(cls, context, board_id):
-        """Find a boad based on its id or uuid and return a Board object.
+        """Find a board based on its id or uuid and return a Board object.
 
         :param board_id: the id *or* uuid of a board.
         :returns: a :class:`Board` object.
@@ -66,7 +66,7 @@ class Board(base.IotronicObject):
         :returns: a :class:`Board` object.
         """
         db_board = cls.dbapi.get_board_by_id(board_id)
-        board = Boad._from_db_object(cls(context), db_board)
+        board = Board._from_db_object(cls(context), db_board)
         return board
 
     @base.remotable_classmethod
@@ -81,13 +81,13 @@ class Board(base.IotronicObject):
         return board
 
     @base.remotable_classmethod
-    def get_by_name(cls, context, name):
+    def get_by_code(cls, context, code):
         """Find a board based on name and return a Board object.
 
         :param name: the logical name of a board.
         :returns: a :class:`Board` object.
         """
-        db_boad = cls.dbapi.get_board_by_name(name)
+        db_board = cls.dbapi.get_board_by_code(code)
         board = Board._from_db_object(cls(context), db_board)
         return board
 
