@@ -12,16 +12,16 @@ fi
 
 case "$1" in
 
-list) curl $BASE/boards/
+list)  curl -sS $BASE/boards/ |  python -m json.tool
 echo "";
 ;;
-create-board) curl -H "Content-Type: application/json" -X POST $BASE/boards/ -d '{"code":"'"$2"'"}'
+create-board) curl -sS -H "Content-Type: application/json" -X POST $BASE/boards/ -d '{"code":"'"$2"'"}'  | python -m json.tool
 echo "";
 ;;
-delete-board) curl -X DELETE $BASE/boards/$2
+delete-board) curl -sS -X DELETE $BASE/boards/$2 |  python -m json.tool
 echo "";
 ;;
-show) curl $BASE/boards/$2
+show) curl -sS $BASE/boards/$2 |  python -m json.tool
 echo "";
 ;;
 *) echo "list - create-board - delete-board - show"
