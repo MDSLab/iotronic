@@ -14,21 +14,18 @@
 
 #from iotronic.objects import chassis
 from iotronic.objects import conductor
-#from iotronic.objects import node
-from iotronic.objects import board
+from iotronic.objects import node
 #from iotronic.objects import port
 
 
 #Chassis = chassis.Chassis
 Conductor = conductor.Conductor
-Board=board.Board
-#Node = node.Node
+Node = node.Node
 #Port = port.Port
 
 __all__ = (
            #Chassis,
            Conductor,
-           #Node,
-           Board,
+           Node,
            #Port
            )

@@ -21,7 +21,7 @@ from pecan import rest
 from webob import exc
 from wsme import types as wtypes
 from iotronic.api.controllers import link
-from iotronic.api.controllers.v1 import board
+from iotronic.api.controllers.v1 import node
 
 
 '''
@@ -29,7 +29,7 @@ from iotronic.api.controllers.v1 import board
 
 #from iotronic.api.controllers.v1 import chassis
 #from iotronic.api.controllers.v1 import driver
-from iotronic.api.controllers.v1 import node
+
 
 #from iotronic.api.controllers.v1 import port
 from iotronic.api.controllers.v1 import board
@@ -79,10 +79,7 @@ class V1(base.APIBase):
     #chassis = [link.Link]
     """Links to the chassis resource"""
 
-    #nodes = [link.Link]
-    """Links to the nodes resource"""
-    
-    boards = [link.Link]
+    nodes = [link.Link]
     """Links to the nodes resource"""
     
     #ports = [link.Link]
@@ -96,13 +93,13 @@ class V1(base.APIBase):
         v1 = V1()
         v1.id = "v1"
         
-        v1.boards = [link.Link.make_link('self', pecan.request.host_url,
-                                'nodes', ''),
-            link.Link.make_link('bookmark',
-                                pecan.request.host_url,
-                                'nodes', '',
-                                bookmark=True)
-            ]
+        v1.nodes = [link.Link.make_link('self', pecan.request.host_url,
+                                        'nodes', ''),
+                    link.Link.make_link('bookmark',
+                                        pecan.request.host_url,
+                                        'nodes', '',
+                                        bookmark=True)
+                    ]
         
         '''
         v1.links = [link.Link.make_link('self', pecan.request.host_url,
@@ -124,14 +121,6 @@ class V1(base.APIBase):
                                            'chassis', '',
                                            bookmark=True)
                       ]
-        
-        v1.nodes = [link.Link.make_link('self', pecan.request.host_url,
-                                        'nodes', ''),
-                    link.Link.make_link('bookmark',
-                                        pecan.request.host_url,
-                                        'nodes', '',
-                                        bookmark=True)
-                    ]
         '''
         '''
         v1.ports = [link.Link.make_link('self', pecan.request.host_url,
@@ -155,8 +144,7 @@ class V1(base.APIBase):
 class Controller(rest.RestController):
     """Version 1 API controller root."""
     
-    boards = board.BoardsController()
-    #nodes = node.NodesController()
+    nodes = node.NodesController()
     #ports = port.PortsController()
     #chassis = chassis.ChassisController()
     #drivers = driver.DriversController()

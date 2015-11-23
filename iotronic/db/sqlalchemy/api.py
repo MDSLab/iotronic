@@ -119,9 +119,9 @@ def add_port_filter_by_node(query, value):
     if strutils.is_int_like(value):
         return query.filter_by(node_id=value)
     else:
-        query = query.join(models.Board,
-                           models.Port.node_id == models.Board.id)
-        return query.filter(models.Board.uuid == value)
+        query = query.join(models.Node,
+                           models.Port.node_id == models.Node.id)
+        return query.filter(models.Node.uuid == value)
 
 
 def add_node_filter_by_chassis(query, value):
@@ -129,7 +129,7 @@ def add_node_filter_by_chassis(query, value):
         return query.filter_by(chassis_id=value)
     else:
         query = query.join(models.Chassis,
-                           models.Board.chassis_id == models.Chassis.id)
+                           models.Node.chassis_id == models.Chassis.id)
         return query.filter(models.Chassis.uuid == value)
 
 
@@ -167,14 +167,16 @@ class Connection(api.Connection):
             query = query.filter_by(chassis_id=chassis_obj.id)
         if 'associated' in filters:
             if filters['associated']:
-                query = query.filter(models.Board.instance_uuid != None)
+                query = query.filter(models.Node.instance_uuid != None)
             else:
-                query = query.filter(models.Board.instance_uuid == None)
+                query = query.filter(models.Node.instance_uuid == None)
+        """
         if 'reserved' in filters:
             if filters['reserved']:
-                query = query.filter(models.Board.reservation != None)
+                query = query.filter(models.Node.reservation != None)
             else:
-                query = query.filter(models.Board.reservation == None)
+                query = query.filter(models.Node.reservation == None)
+        """
         if 'maintenance' in filters:
             query = query.filter_by(maintenance=filters['maintenance'])
         if 'driver' in filters:
@@ -184,12 +186,12 @@ class Connection(api.Connection):
         if 'provisioned_before' in filters:
             limit = (timeutils.utcnow() -
                      datetime.timedelta(seconds=filters['provisioned_before']))
-            query = query.filter(models.Board.provision_updated_at < limit)
+            query = query.filter(models.Node.provision_updated_at < limit)
         if 'inspection_started_before' in filters:
             limit = ((timeutils.utcnow()) -
                      (datetime.timedelta(
                          seconds=filters['inspection_started_before'])))
-            query = query.filter(models.Board.inspection_started_at < limit)
+            query = query.filter(models.Node.inspection_started_at < limit)
 
         return query
 
@@ -198,26 +200,26 @@ class Connection(api.Connection):
         # list-ify columns default values because it is bad form
         # to include a mutable list in function definitions.
         if columns is None:
-            columns = [models.Board.id]
+            columns = [models.Node.id]
         else:
-            columns = [getattr(models.Board, c) for c in columns]
+            columns = [getattr(models.Node, c) for c in columns]
 
-        query = model_query(*columns, base_model=models.Board)
+        query = model_query(*columns, base_model=models.Node)
         query = self._add_nodes_filters(query, filters)
-        return _paginate_query(models.Board, limit, marker,
+        return _paginate_query(models.Node, limit, marker,
                                sort_key, sort_dir, query)
 
     def get_node_list(self, filters=None, limit=None, marker=None,
                       sort_key=None, sort_dir=None):
-        query = model_query(models.Board)
+        query = model_query(models.Node)
         query = self._add_nodes_filters(query, filters)
-        return _paginate_query(models.Board, limit, marker,
+        return _paginate_query(models.Node, limit, marker,
                                sort_key, sort_dir, query)
 
     def reserve_node(self, tag, node_id):
         session = get_session()
         with session.begin():
-            query = model_query(models.Board, session=session)
+            query = model_query(models.Node, session=session)
             query = add_identity_filter(query, node_id)
             # be optimistic and assume we usually create a reservation
             count = query.filter_by(reservation=None).update(
@@ -236,7 +238,7 @@ class Connection(api.Connection):
     def release_node(self, tag, node_id):
         session = get_session()
         with session.begin():
-            query = model_query(models.Board, session=session)
+            query = model_query(models.Node, session=session)
             query = add_identity_filter(query, node_id)
             # be optimistic and assume we usually release a reservation
             count = query.filter_by(reservation=tag).update(
@@ -262,7 +264,7 @@ class Connection(api.Connection):
             # TODO(deva): change this to ENROLL
             values['provision_state'] = states.AVAILABLE
 
-        node = models.Board()
+        node = models.Node()
         node.update(values)
         try:
             node.save()
@@ -277,21 +279,21 @@ class Connection(api.Connection):
         return node
 
     def get_node_by_id(self, node_id):
-        query = model_query(models.Board).filter_by(id=node_id)
+        query = model_query(models.Node).filter_by(id=node_id)
         try:
             return query.one()
         except NoResultFound:
             raise exception.NodeNotFound(node=node_id)
 
     def get_node_by_uuid(self, node_uuid):
-        query = model_query(models.Board).filter_by(uuid=node_uuid)
+        query = model_query(models.Node).filter_by(uuid=node_uuid)
         try:
             return query.one()
         except NoResultFound:
             raise exception.NodeNotFound(node=node_uuid)
 
     def get_node_by_name(self, node_name):
-        query = model_query(models.Board).filter_by(name=node_name)
+        query = model_query(models.Node).filter_by(name=node_name)
         try:
             return query.one()
         except NoResultFound:
@@ -301,7 +303,7 @@ class Connection(api.Connection):
         if not uuidutils.is_uuid_like(instance):
             raise exception.InvalidUUID(uuid=instance)
 
-        query = (model_query(models.Board)
+        query = (model_query(models.Node)
                  .filter_by(instance_uuid=instance))
 
         try:
@@ -312,9 +314,26 @@ class Connection(api.Connection):
         return result
 
     def destroy_node(self, node_id):
+        
         session = get_session()
         with session.begin():
-            query = model_query(models.Board, session=session)
+            query = model_query(models.Node, session=session)
+            query = add_identity_filter(query, node_id)
+            try:
+                node_ref = query.one()
+            except NoResultFound:
+                raise exception.NodeNotFound(node=node_id)
+
+            # Get node ID, if an UUID was supplied. The ID is
+            # required for deleting all ports, attached to the node.
+            if uuidutils.is_uuid_like(node_id):
+                node_id = node_ref['id']
+
+            query.delete()
+        """
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Node, session=session)
             query = add_identity_filter(query, node_id)
 
             try:
@@ -332,11 +351,12 @@ class Connection(api.Connection):
             #port_query.delete()
 
             query.delete()
-
+        """
+        
     def update_node(self, node_id, values):
         # NOTE(dtantsur): this can lead to very strange errors
         if 'uuid' in values:
-            msg = _("Cannot overwrite UUID for an existing Board.")
+            msg = _("Cannot overwrite UUID for an existing Node.")
             raise exception.InvalidParameterValue(err=msg)
 
         try:
@@ -356,7 +376,7 @@ class Connection(api.Connection):
     def _do_update_node(self, node_id, values):
         session = get_session()
         with session.begin():
-            query = model_query(models.Board, session=session)
+            query = model_query(models.Node, session=session)
             query = add_identity_filter(query, node_id)
             try:
                 ref = query.with_lockmode('update').one()
@@ -509,7 +529,7 @@ class Connection(api.Connection):
         def chassis_not_empty(session):
             """Checks whether the chassis does not have nodes."""
 
-            query = model_query(models.Board, session=session)
+            query = model_query(models.Node, session=session)
             query = add_node_filter_by_chassis(query, chassis_id)
 
             return query.count() != 0
@@ -579,7 +599,7 @@ class Connection(api.Connection):
         session = get_session()
         nodes = []
         with session.begin():
-            query = (model_query(models.Board, session=session)
+            query = (model_query(models.Node, session=session)
                      .filter_by(reservation=hostname))
             nodes = [node['uuid'] for node in query]
             query.update({'reservation': None})
@@ -607,6 +627,7 @@ class Connection(api.Connection):
         return d2c
 
 
+"""
 ###################### NEW #############################
     def _add_boards_filters(self, query, filters):
         if filters is None:
@@ -819,3 +840,4 @@ class Connection(api.Connection):
             '''
             ref.update(values)
         return ref
+"""

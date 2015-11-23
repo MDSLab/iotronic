@@ -337,7 +337,7 @@ class ConductorAPI(object):
         :raises: InvalidState if the node is in the wrong provision
             state to perform deletion.
         """
-        cctxt = self.client.prepare(topic=topic or self.topic, version='1.9')
+        cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
         return cctxt.call(context, 'destroy_node', node_id=node_id)
 
     def get_console_information(self, context, node_id, topic=None):
@@ -505,6 +505,7 @@ class ConductorAPI(object):
         cctxt = self.client.prepare(topic=topic or self.topic, version='1.25')
         return cctxt.call(context, 'destroy_port', port=port)
 
+'''
 ######################### NEW
 
     def destroy_board(self, context, board_id, topic=None):
@@ -520,3 +521,4 @@ class ConductorAPI(object):
         """
         cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
         return cctxt.call(context, 'destroy_board', board_id=board_id)
+'''

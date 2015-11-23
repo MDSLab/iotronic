@@ -20,13 +20,13 @@ CREATE DATABASE /*!32312 IF NOT EXISTS*/ `iotronic` /*!40100 DEFAULT CHARACTER S
 USE `iotronic`;
 
 --
--- Table structure for table `boards`
+-- Table structure for table `nodes`
 --
 
-DROP TABLE IF EXISTS `boards`;
+DROP TABLE IF EXISTS `nodes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `boards` (
+CREATE TABLE `nodes` (
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
   `id` int(11) NOT NULL AUTO_INCREMENT,

@@ -139,8 +139,22 @@ class Conductor(Base):
 
 
 class Node(Base):
-    """Represents a bare metal node."""
+    """Represents a board."""
 
+    __tablename__ = 'nodes'
+    '''
+    __table_args__ = (
+        schema.UniqueConstraint('uuid', name='uniq_nodes0uuid'),
+        schema.UniqueConstraint('instance_uuid',
+                                name='uniq_nodes0instance_uuid'),
+        schema.UniqueConstraint('name', name='uniq_nodes0name'),
+        table_args())
+    '''
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36))
+    code = Column(String(25))
+    status = Column(String(15), nullable=True)
+"""
     __tablename__ = 'nodes'
     '''
     __table_args__ = (
@@ -193,7 +207,7 @@ class Node(Base):
     #inspection_finished_at = Column(DateTime, nullable=True)
     #inspection_started_at = Column(DateTime, nullable=True)
     #extra = Column(JSONEncodedDict)
-
+"""
 
 class Port(Base):
     """Represents a network port of a bare metal node."""
@@ -208,23 +222,4 @@ class Port(Base):
     address = Column(String(18))
     node_id = Column(Integer, ForeignKey('nodes.id'), nullable=True)
     extra = Column(JSONEncodedDict)
-    
-##################### NEW
-class Board(Base):
-    """Represents a board."""
-
-    __tablename__ = 'boards'
-    '''
-    __table_args__ = (
-        schema.UniqueConstraint('uuid', name='uniq_nodes0uuid'),
-        schema.UniqueConstraint('instance_uuid',
-                                name='uniq_nodes0instance_uuid'),
-        schema.UniqueConstraint('name', name='uniq_nodes0name'),
-        table_args())
-    '''
-    id = Column(Integer, primary_key=True)
-    uuid = Column(String(36))
-    code = Column(String(25))
-    status = Column(String(15), nullable=True)
-    #reservation = Column(String(255), nullable=True)
 

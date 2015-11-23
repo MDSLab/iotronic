@@ -19,10 +19,10 @@
 A context manager to perform a series of tasks on a set of resources.
 
 :class:`TaskManager` is a context manager, created on-demand to allow
-synchronized access to a board and its resources.
+synchronized access to a node and its resources.
 
 The :class:`TaskManager` will, by default, acquire an exclusive lock on
-a board for the duration that the TaskManager instance exists. You may
+a node for the duration that the TaskManager instance exists. You may
 create a TaskManager instance without locking by passing "shared=True"
 when creating it, but certain operations on the resources held by such
 an instance of TaskManager will not be possible. Requiring this exclusive
@@ -38,28 +38,28 @@ different hosts.
 :class:`TaskManager` methods, as well as driver methods, may be decorated to
 determine whether their invocation requires an exclusive lock.
 
-The TaskManager instance exposes certain board resources and properties as
+The TaskManager instance exposes certain node resources and properties as
 attributes that you may access:
 
     task.context
         The context passed to TaskManager()
     task.shared
-        False if Board is locked, True if it is not locked. (The
+        False if Node is locked, True if it is not locked. (The
         'shared' kwarg arg of TaskManager())
-    task.board
-        The Board object
+    task.node
+        The Node object
     task.ports
-        Ports belonging to the Board
+        Ports belonging to the Node
     task.driver
-        The Driver for the Board, or the Driver based on the
+        The Driver for the Node, or the Driver based on the
         'driver_name' kwarg of TaskManager().
 
 Example usage:
 
 ::
 
-    with task_manager.acquire(context, board_id) as task:
-        task.driver.power.power_on(task.board)
+    with task_manager.acquire(context, node_id) as task:
+        task.driver.power.power_on(task.node)
 
 If you need to execute task-requiring code in a background thread, the
 TaskManager instance provides an interface to handle this for you, making
@@ -68,10 +68,10 @@ an exception occurs). Common use of this is within the Manager like so:
 
 ::
 
-    with task_manager.acquire(context, board_id) as task:
+    with task_manager.acquire(context, node_id) as task:
         <do some work>
         task.spawn_after(self._spawn_worker,
-                         utils.board_power_action, task, new_state)
+                         utils.node_power_action, task, new_state)
 
 All exceptions that occur in the current GreenThread as part of the
 spawn handling are re-raised. You can specify a hook to execute custom
@@ -86,11 +86,11 @@ raised in the background thread.):
         if isinstance(e, Exception):
             ...
 
-    with task_manager.acquire(context, board_id) as task:
+    with task_manager.acquire(context, node_id) as task:
         <do some work>
         task.set_spawn_error_hook(on_error)
         task.spawn_after(self._spawn_worker,
-                         utils.board_power_action, task, new_state)
+                         utils.node_power_action, task, new_state)
 
 """
 
@@ -129,18 +129,18 @@ def require_exclusive_lock(f):
     return wrapper
 
 
-def acquire(context, board_id, shared=False, driver_name=None):
-    """Shortcut for acquiring a lock on a Board.
+def acquire(context, node_id, shared=False, driver_name=None):
+    """Shortcut for acquiring a lock on a Node.
 
     :param context: Request context.
-    :param board_id: ID or UUID of board to lock.
+    :param node_id: ID or UUID of node to lock.
     :param shared: Boolean indicating whether to take a shared or exclusive
                    lock. Default: False.
     :param driver_name: Name of Driver. Default: None.
     :returns: An instance of :class:`TaskManager`.
 
     """
-    return TaskManager(context, board_id, shared=shared,
+    return TaskManager(context, node_id, shared=shared,
                        driver_name=driver_name)
 
 
@@ -148,27 +148,27 @@ class TaskManager(object):
     """Context manager for tasks.
 
     This class wraps the locking, driver loading, and acquisition
-    of related resources (eg, Board and Ports) when beginning a unit of work.
+    of related resources (eg, Node and Ports) when beginning a unit of work.
 
     """
 
-    def __init__(self, context, board_id, shared=False, driver_name=None):
+    def __init__(self, context, node_id, shared=False, driver_name=None):
         """Create a new TaskManager.
 
-        Acquire a lock on a board. The lock can be either shared or
+        Acquire a lock on a node. The lock can be either shared or
         exclusive. Shared locks may be used for read-only or
         non-disruptive actions only, and must be considerate to what
-        other threads may be doing on the same board at the same time.
+        other threads may be doing on the same node at the same time.
 
         :param context: request context
-        :param board_id: ID or UUID of board to lock.
+        :param node_id: ID or UUID of node to lock.
         :param shared: Boolean indicating whether to take a shared or exclusive
                        lock. Default: False.
         :param driver_name: The name of the driver to load, if different
-                            from the Board's current driver.
+                            from the Node's current driver.
         :raises: DriverNotFound
-        :raises: BoardNotFound
-        :raises: BoardLocked
+        :raises: NodeNotFound
+        :raises: NodeLocked
 
         """
 
@@ -176,41 +176,43 @@ class TaskManager(object):
         self._on_error_method = None
 
         self.context = context
-        #self.board = None
-        self.board = None
+        #self.node = None
+        self.node = None
         self.shared = shared
 
         self.fsm = states.machine.copy()
 
-        # BoardLocked exceptions can be annoying. Let's try to alleviate
+        # NodeLocked exceptions can be annoying. Let's try to alleviate
         # some of that pain by retrying our lock attempts. The retrying
         # module expects a wait_fixed value in milliseconds.
         @retrying.retry(
-            retry_on_exception=lambda e: isinstance(e, exception.BoardLocked),
-            stop_max_attempt_number=CONF.conductor.board_locked_retry_attempts,
-            wait_fixed=CONF.conductor.board_locked_retry_interval * 1000)
-        def reserve_board():
-            LOG.debug("Attempting to reserve board %(board)s",
-                      {'board': board_id})
-            self.board = objects.Board.reserve(context, CONF.host, board_id)
+            retry_on_exception=lambda e: isinstance(e, exception.NodeLocked),
+            stop_max_attempt_number=CONF.conductor.node_locked_retry_attempts,
+            wait_fixed=CONF.conductor.node_locked_retry_interval * 1000)
+        def reserve_node():
+            LOG.debug("Attempting to reserve node %(node)s",
+                      {'node': node_id})
+            self.node = objects.Node.reserve(context, CONF.host, node_id)
 
         try:
+            """
             if not self.shared:
-                reserve_board()
+                reserve_node()
             else:
-                self.board = objects.Board.get(context, board_id)
-            #self.ports = objects.Port.list_by_board_id(context, self.board.id)
+            """
+            self.node = objects.Node.get(context, node_id)
+            #self.ports = objects.Port.list_by_node_id(context, self.node.id)
             #self.driver = driver_factory.get_driver(driver_name or
-            #                                       self.board.driver)
+            #                                       self.node.driver)
 
             # NOTE(deva): this handles the Juno-era NOSTATE state
             #             and should be deleted after Kilo is released
             '''
-            if self.board.provision_state is states.NOSTATE:
-                self.board.provision_state = states.AVAILABLE
-                self.board.save()
+            if self.node.provision_state is states.NOSTATE:
+                self.node.provision_state = states.AVAILABLE
+                self.node.save()
 
-            self.fsm.initialize(self.board.provision_state)
+            self.fsm.initialize(self.node.provision_state)
             '''
         except Exception:
             with excutils.save_and_reraise_exception():
@@ -248,25 +250,27 @@ class TaskManager(object):
         self._on_error_kwargs = kwargs
 
     def release_resources(self):
-        """Unlock a board and release resources.
+        """Unlock a node and release resources.
 
-        If an exclusive lock is held, unlock the board. Reset attributes
+        If an exclusive lock is held, unlock the node. Reset attributes
         to make it clear that this instance of TaskManager should no
         longer be accessed.
         """
-
+        pass #don't need it at the moment
+        """
         if not self.shared:
             try:
-                if self.board:
-                    objects.Board.release(self.context, CONF.host, self.board.id)
-            except exception.BoardNotFound:
-                # squelch the exception if the board was deleted
+                if self.node:
+                    objects.Node.release(self.context, CONF.host, self.node.id)
+            except exception.NodeNotFound:
+                # squelch the exception if the node was deleted
                 # within the task's context.
                 pass
-        self.board = None
+        self.node = None
         self.driver = None
         self.ports = None
         self.fsm = None
+        """
 
     def _thread_release_resources(self, t):
         """Thread.link() callback to release resources."""
@@ -282,38 +286,38 @@ class TaskManager(object):
         :param call_kwargs: optional \**kwargs to pass to the callback method
         :param err_handler: optional error handler to invoke if the
                 callback fails, eg. because there are no workers available
-                (err_handler should accept arguments board, prev_prov_state, and
+                (err_handler should accept arguments node, prev_prov_state, and
                 prev_target_state)
         :raises: InvalidState if the event is not allowed by the associated
                  state machine
         """
         # Advance the state model for the given event. Note that this doesn't
-        # alter the board in any way. This may raise InvalidState, if this event
+        # alter the node in any way. This may raise InvalidState, if this event
         # is not allowed in the current state.
         self.fsm.process_event(event)
 
         # stash current states in the error handler if callback is set,
         # in case we fail to get a worker from the pool
         if err_handler and callback:
-            self.set_spawn_error_hook(err_handler, self.board,
-                                      self.board.provision_state,
-                                      self.board.target_provision_state)
+            self.set_spawn_error_hook(err_handler, self.node,
+                                      self.node.provision_state,
+                                      self.node.target_provision_state)
 
-        self.board.provision_state = self.fsm.current_state
-        self.board.target_provision_state = self.fsm.target_state
+        self.node.provision_state = self.fsm.current_state
+        self.node.target_provision_state = self.fsm.target_state
 
         # set up the async worker
         if callback:
             # clear the error if we're going to start work in a callback
-            self.board.last_error = None
+            self.node.last_error = None
             if call_args is None:
                 call_args = ()
             if call_kwargs is None:
                 call_kwargs = {}
             self.spawn_after(callback, *call_args, **call_kwargs)
 
-        # publish the state transition by saving the Board
-        self.board.save()
+        # publish the state transition by saving the Node
+        self.node.save()
 
     def __enter__(self):
         return self
@@ -351,9 +355,9 @@ class TaskManager(object):
                                                   **self._on_error_kwargs)
                     except Exception:
                         LOG.warning(_LW("Task's on_error hook failed to "
-                                        "call %(method)s on board %(board)s"),
+                                        "call %(method)s on node %(node)s"),
                                     {'method': self._on_error_method.__name__,
-                                    'board': self.board.uuid})
+                                    'node': self.node.uuid})
 
                     if thread is not None:
                         # This means the link() failed for some

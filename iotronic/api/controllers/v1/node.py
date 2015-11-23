@@ -12,8 +12,8 @@ import pecan
 from pecan import rest
 
 
-class Board(base.APIBase):
-    """API representation of a board.
+class Node(base.APIBase):
+    """API representation of a node.
     """
 
     uuid = types.uuid
@@ -21,45 +21,45 @@ class Board(base.APIBase):
     status = wsme.wsattr(wtypes.text)
 
     @staticmethod
-    def _convert_with_links(board, url, expand=True, show_password=True):
+    def _convert_with_links(node, url, expand=True, show_password=True):
         '''
         if not expand:
             except_list = ['instance_uuid', 'maintenance', 'power_state',
                            'provision_state', 'uuid', 'name']
-            board.unset_fields_except(except_list)
+            node.unset_fields_except(except_list)
         else:
             if not show_password:
-                board.driver_info = ast.literal_eval(strutils.mask_password(
-                                                    board.driver_info,
+                node.driver_info = ast.literal_eval(strutils.mask_password(
+                                                    node.driver_info,
                                                     "******"))
-            board.ports = [link.Link.make_link('self', url, 'boards',
-                                              board.uuid + "/ports"),
-                          link.Link.make_link('bookmark', url, 'boards',
-                                              board.uuid + "/ports",
+            node.ports = [link.Link.make_link('self', url, 'nodes',
+                                              node.uuid + "/ports"),
+                          link.Link.make_link('bookmark', url, 'nodes',
+                                              node.uuid + "/ports",
                                               bookmark=True)
                           ]
 
-        board.chassis_id = wtypes.Unset
+        node.chassis_id = wtypes.Unset
         '''
         '''
-        board.links = [link.Link.make_link('self', url, 'boards',
-                                          board.uuid),
-                      link.Link.make_link('bookmark', url, 'boards',
-                                          board.uuid, bookmark=True)
+        node.links = [link.Link.make_link('self', url, 'nodes',
+                                          node.uuid),
+                      link.Link.make_link('bookmark', url, 'nodes',
+                                          node.uuid, bookmark=True)
                       ]
         '''
-        return board
+        return node
     
     @classmethod
-    def convert_with_links(cls, rpc_board, expand=True):
-        board = Board(**rpc_board.as_dict())
-        return cls._convert_with_links(board, pecan.request.host_url,
+    def convert_with_links(cls, rpc_node, expand=True):
+        node = Node(**rpc_node.as_dict())
+        return cls._convert_with_links(node, pecan.request.host_url,
                                        expand,
                                        pecan.request.context.show_password)
 
     def __init__(self, **kwargs):
         self.fields = []
-        fields = list(objects.Board.fields)
+        fields = list(objects.Node.fields)
         for k in fields:
             # Skip fields we do not expose.
             if not hasattr(self, k):
@@ -67,27 +67,27 @@ class Board(base.APIBase):
             self.fields.append(k)
             setattr(self, k, kwargs.get(k, wtypes.Unset))
             
-class BoardCollection(collection.Collection):
-    """API representation of a collection of boards."""
+class NodeCollection(collection.Collection):
+    """API representation of a collection of nodes."""
 
-    boards = [Board]
-    """A list containing boards objects"""
+    nodes = [Node]
+    """A list containing nodes objects"""
 
     def __init__(self, **kwargs):
-        self._type = 'boards'
+        self._type = 'nodes'
 
     @staticmethod
-    def convert_with_links(boards, limit, url=None, expand=False, **kwargs):
-        collection = BoardCollection()
-        collection.boards = [Board.convert_with_links(n, expand) for n in boards]
+    def convert_with_links(nodes, limit, url=None, expand=False, **kwargs):
+        collection = NodeCollection()
+        collection.nodes = [Node.convert_with_links(n, expand) for n in nodes]
         collection.next = collection.get_next(limit, url=url, **kwargs)
         return collection
     
-class BoardsController(rest.RestController):
+class NodesController(rest.RestController):
 
     invalid_sort_key_list = ['properties']
 
-    def _get_boards_collection(self, chassis_uuid, instance_uuid, associated,
+    def _get_nodes_collection(self, chassis_uuid, instance_uuid, associated,
                               maintenance, marker, limit, sort_key, sort_dir,
                               expand=False, resource_url=None):
         '''
@@ -100,7 +100,7 @@ class BoardsController(rest.RestController):
 
         marker_obj = None
         if marker:
-            marker_obj = objects.Board.get_by_uuid(pecan.request.context,
+            marker_obj = objects.Node.get_by_uuid(pecan.request.context,
                                                   marker)
 
         if sort_key in self.invalid_sort_key_list:
@@ -109,7 +109,7 @@ class BoardsController(rest.RestController):
                   "sorting") % {'key': sort_key})
 
         if instance_uuid:
-            boards = self._get_boards_by_instance(instance_uuid)
+            nodes = self._get_nodes_by_instance(instance_uuid)
         else:
             filters = {}
             if chassis_uuid:
@@ -119,7 +119,7 @@ class BoardsController(rest.RestController):
             if maintenance is not None:
                 filters['maintenance'] = maintenance
 
-            boards = objects.Board.list(pecan.request.context, limit, marker_obj,
+            nodes = objects.Node.list(pecan.request.context, limit, marker_obj,
                                       sort_key=sort_key, sort_dir=sort_dir,
                                       filters=filters)
             
@@ -128,80 +128,80 @@ class BoardsController(rest.RestController):
             parameters['associated'] = associated
         if maintenance:
             parameters['maintenance'] = maintenance
-        return BoardCollection.convert_with_links(boards, limit,
+        return NodeCollection.convert_with_links(nodes, limit,
                                                  url=resource_url,
                                                  expand=expand,
                                                  **parameters)
     
-    @expose.expose(BoardCollection, types.uuid, types.uuid, types.boolean,
+    @expose.expose(NodeCollection, types.uuid, types.uuid, types.boolean,
                    types.boolean, types.uuid, int, wtypes.text, wtypes.text)
     def get_all(self, chassis_uuid=None, instance_uuid=None, associated=None,
                 maintenance=None, marker=None, limit=None, sort_key='id',
                 sort_dir='asc'):
-        """Retrieve a list of boards.
+        """Retrieve a list of nodes.
 
-        :param chassis_uuid: Optional UUID of a chassis, to get only boards for
+        :param chassis_uuid: Optional UUID of a chassis, to get only nodes for
                            that chassis.
-        :param instance_uuid: Optional UUID of an instance, to find the board
+        :param instance_uuid: Optional UUID of an instance, to find the node
                               associated with that instance.
         :param associated: Optional boolean whether to return a list of
-                           associated or unassociated boards. May be combined
+                           associated or unassociated nodes. May be combined
                            with other parameters.
         :param maintenance: Optional boolean value that indicates whether
-                            to get boards in maintenance mode ("True"), or not
+                            to get nodes in maintenance mode ("True"), or not
                             in maintenance mode ("False").
         :param marker: pagination marker for large data sets.
         :param limit: maximum number of resources to return in a single result.
         :param sort_key: column to sort results by. Default: id.
         :param sort_dir: direction to sort. "asc" or "desc". Default: asc.
         """
-        return self._get_boards_collection(chassis_uuid, instance_uuid,
+        return self._get_nodes_collection(chassis_uuid, instance_uuid,
                                           associated, maintenance, marker,
                                           limit, sort_key, sort_dir)
 
     
     
-    @expose.expose(Board,types.uuid_or_name)    
-    def get(self,board_ident):
-        """Retrieve information about the given board.
+    @expose.expose(Node,types.uuid_or_name)    
+    def get(self,node_ident):
+        """Retrieve information about the given node.
 
-        :param node_ident: UUID or logical name of a board.
+        :param node_ident: UUID or logical name of a node.
         """
-        rpc_board = api_utils.get_rpc_board(board_ident)
-        board = Board(**rpc_board.as_dict())
-        return board
+        rpc_node = api_utils.get_rpc_node(node_ident)
+        node = Node(**rpc_node.as_dict())
+        return node
     
     @expose.expose(None, types.uuid_or_name, status_code=204)
-    def delete(self, board_ident):
-        """Delete a board.
+    def delete(self, node_ident):
+        """Delete a node.
 
-        :param board_ident: UUID or logical name of a board.
+        :param node_ident: UUID or logical name of a node.
         """
-        rpc_board = api_utils.get_rpc_board(board_ident)
+        rpc_node = api_utils.get_rpc_node(node_ident)
 
         try:
-            topic = pecan.request.rpcapi.get_topic_for(rpc_board)
+            topic = pecan.request.rpcapi.get_topic_for(rpc_node)
         except exception.NoValidHost as e:
             e.code = 400
             raise e
 
-        pecan.request.rpcapi.destroy_board(pecan.request.context,
-                                          rpc_board.uuid, topic)
+        pecan.request.rpcapi.destroy_node(pecan.request.context,
+                                          rpc_node.uuid, topic)
         
-    @expose.expose(Board, body=Board, status_code=201)
-    def post(self,Board):
-        """Create a new Board.
+    @expose.expose(Node, body=Node, status_code=201)
+    def post(self,Node):
+        """Create a new Node.
 
-        :param Board: a Board within the request body.
+        :param Node: a Node within the request body.
         """
         
-        if not Board.uuid:
-            Board.uuid = uuidutils.generate_uuid()
-        if not Board.status:
-            Board.status = 'DISCONNECTED'
-        new_Board = objects.Board(pecan.request.context,
-                                **Board.as_dict())
-        new_Board.create()
-        #pecan.response.location = link.build_url('Boards', new_Board.uuid)
-        return Board.convert_with_links(new_Board)
+        if not Node.uuid:
+            Node.uuid = uuidutils.generate_uuid()
+        if not Node.status:
+            Node.status = 'DISCONNECTED'
+        new_Node = objects.Node(pecan.request.context,
+                                **Node.as_dict())
+        new_Node.create()
+        #pecan.response.location = link.build_url('Nodes', new_Node.uuid)
+        return Node.convert_with_links(new_Node)
 

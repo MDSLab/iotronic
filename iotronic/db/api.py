@@ -395,7 +395,7 @@ class Connection(object):
         """
 
 
-
+'''
 
 ###################### NEW #############################
 
@@ -572,3 +572,4 @@ class Connection(object):
         :raises: BoardAssociated
         :raises: BoardNotFound
         """
+'''
