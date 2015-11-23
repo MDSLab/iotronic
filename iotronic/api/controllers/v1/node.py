@@ -7,9 +7,11 @@ from iotronic.api.controllers.v1 import collection
 from iotronic.api.controllers.v1 import utils as api_utils
 from iotronic.api.controllers import base
 from oslo_utils import uuidutils
+from iotronic.common import exception
 import wsme
 import pecan
 from pecan import rest
+import code
 
 
 class Node(base.APIBase):
@@ -203,11 +205,29 @@ class NodesController(rest.RestController):
 
         :param Node: a Node within the request body.
         """
+
+        if not Node.name:
+            raise exception.MissingParameterValue(
+                _("Name is not specified."))
+        if not Node.code:
+            raise exception.MissingParameterValue(
+                _("Code is not specified."))
+        if not Node.location:
+            raise exception.MissingParameterValue(
+                _("Location is not specified."))
         
-        if not Node.uuid:
-            Node.uuid = uuidutils.generate_uuid()
-        if not Node.status:
-            Node.status = 'DISCONNECTED'
+        """
+        if Node.name:
+            if not api_utils.allow_node_logical_names():
+                raise exception.NotAcceptable()
+            if not api_utils.is_valid_node_name(Node.name):
+                msg = _("Cannot create node with invalid name %(name)s")
+                raise wsme.exc.ClientSideError(msg % {'name': Node.name},
+                                              status_code=400)
+        """
+        
+        Node.status = 'DISCONNECTED'
+        Node.uuid = uuidutils.generate_uuid()
         new_Node = objects.Node(pecan.request.context,
                                 **Node.as_dict())
         new_Node.create()
