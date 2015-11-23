@@ -216,15 +216,16 @@ class NodesController(rest.RestController):
             raise exception.MissingParameterValue(
                 _("Location is not specified."))
         
-        """
         if Node.name:
-            if not api_utils.allow_node_logical_names():
-                raise exception.NotAcceptable()
             if not api_utils.is_valid_node_name(Node.name):
                 msg = _("Cannot create node with invalid name %(name)s")
                 raise wsme.exc.ClientSideError(msg % {'name': Node.name},
                                               status_code=400)
-        """
+                
+        try:
+            objects.Node.get_by_name(pecan.request.context, Node.name)
+        except:
+            raise exception.DuplicateCode(code=Node.code)
         
         Node.status = 'DISCONNECTED'
         Node.uuid = uuidutils.generate_uuid()

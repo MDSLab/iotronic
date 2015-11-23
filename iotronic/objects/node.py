@@ -98,6 +98,17 @@ class Node(base.IotronicObject):
         return node
 
     @base.remotable_classmethod
+    def get_by_name(cls, context, name):
+        """Find a node based on name and return a Node object.
+
+        :param name: the logical name of a node.
+        :returns: a :class:`Node` object.
+        """
+        db_node = cls.dbapi.get_node_by_name(name)
+        node = Node._from_db_object(cls(context), db_node)
+        return node    
+    
+    @base.remotable_classmethod
     def get_by_instance_uuid(cls, context, instance_uuid):
         """Find a node based on the instance uuid and return a Node object.
 
