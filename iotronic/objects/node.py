@@ -33,6 +33,12 @@ class Node(base.IotronicObject):
         'uuid': obj_utils.str_or_none,
         'code': obj_utils.str_or_none,
         'status': obj_utils.str_or_none,
+        'name': obj_utils.str_or_none,
+        'device': obj_utils.str_or_none,
+        'session': obj_utils.str_or_none,
+        'mobile': bool,
+        'location': obj_utils.dict_or_none,
+        'extra': obj_utils.dict_or_none,
         #'reservation': obj_utils.str_or_none,
     }
 

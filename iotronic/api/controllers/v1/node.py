@@ -19,14 +19,20 @@ class Node(base.APIBase):
     uuid = types.uuid
     code = wsme.wsattr(wtypes.text)
     status = wsme.wsattr(wtypes.text)
+    name= wsme.wsattr(wtypes.text)
+    device= wsme.wsattr(wtypes.text)
+    session= wsme.wsattr(wtypes.text)
+    mobile=types.boolean
+    location=types.jsontype
+    extra=types.jsontype
 
     @staticmethod
     def _convert_with_links(node, url, expand=True, show_password=True):
-        '''
+        
         if not expand:
-            except_list = ['instance_uuid', 'maintenance', 'power_state',
-                           'provision_state', 'uuid', 'name']
+            except_list = ['name', 'code', 'status','uuid']
             node.unset_fields_except(except_list)
+        '''
         else:
             if not show_password:
                 node.driver_info = ast.literal_eval(strutils.mask_password(
@@ -112,22 +118,25 @@ class NodesController(rest.RestController):
             nodes = self._get_nodes_by_instance(instance_uuid)
         else:
             filters = {}
+            '''
             if chassis_uuid:
                 filters['chassis_uuid'] = chassis_uuid
             if associated is not None:
                 filters['associated'] = associated
             if maintenance is not None:
                 filters['maintenance'] = maintenance
-
+            '''
             nodes = objects.Node.list(pecan.request.context, limit, marker_obj,
                                       sort_key=sort_key, sort_dir=sort_dir,
                                       filters=filters)
             
         parameters = {'sort_key': sort_key, 'sort_dir': sort_dir}
+        '''
         if associated:
             parameters['associated'] = associated
         if maintenance:
             parameters['maintenance'] = maintenance
+        '''
         return NodeCollection.convert_with_links(nodes, limit,
                                                  url=resource_url,
                                                  expand=expand,

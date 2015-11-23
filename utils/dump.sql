@@ -33,6 +33,13 @@ CREATE TABLE `nodes` (
   `uuid` varchar(36) NOT NULL,
   `code` varchar(25) DEFAULT NULL,
   `status` varchar(15) DEFAULT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `device` varchar(255) DEFAULT NULL,
+  `session` varchar(255) DEFAULT NULL,
+  `mobile` tinyint(1) DEFAULT NULL,
+  `location` text,
+  `extra` text,
+
   PRIMARY KEY (`id`),
   UNIQUE KEY `uuid` (`uuid`)
 ) ENGINE=InnoDB AUTO_INCREMENT=127 DEFAULT CHARSET=utf8;

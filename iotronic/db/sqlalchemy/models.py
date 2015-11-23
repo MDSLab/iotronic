@@ -154,6 +154,12 @@ class Node(Base):
     uuid = Column(String(36))
     code = Column(String(25))
     status = Column(String(15), nullable=True)
+    name = Column(String(255), nullable=True)
+    device = Column(String(255), nullable=True)
+    session = Column(String(255), nullable=True)
+    mobile = Column(Boolean, default=False)
+    location = Column(JSONEncodedDict)
+    extra = Column(JSONEncodedDict)    
 """
     __tablename__ = 'nodes'
     '''
