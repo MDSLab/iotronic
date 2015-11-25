@@ -142,14 +142,11 @@ class Node(Base):
     """Represents a board."""
 
     __tablename__ = 'nodes'
-    '''
+    
     __table_args__ = (
         schema.UniqueConstraint('uuid', name='uniq_nodes0uuid'),
-        schema.UniqueConstraint('instance_uuid',
-                                name='uniq_nodes0instance_uuid'),
-        schema.UniqueConstraint('name', name='uniq_nodes0name'),
+        schema.UniqueConstraint('code', name='uniq_nodes0code'),
         table_args())
-    '''
     id = Column(Integer, primary_key=True)
     uuid = Column(String(36))
     code = Column(String(25))

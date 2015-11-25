@@ -39,11 +39,12 @@ CREATE TABLE `nodes` (
   `mobile` tinyint(1) DEFAULT NULL,
   `location` text,
   `extra` text,
-
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uuid` (`uuid`)
+  UNIQUE KEY `uuid` (`uuid`),
+  UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=127 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 --
 -- Table structure for table `conductors`

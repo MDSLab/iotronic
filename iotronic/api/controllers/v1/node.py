@@ -6,7 +6,6 @@ from iotronic.api.controllers.v1 import types
 from iotronic.api.controllers.v1 import collection
 from iotronic.api.controllers.v1 import utils as api_utils
 from iotronic.api.controllers import base
-from oslo_utils import uuidutils
 from iotronic.common import exception
 import wsme
 import pecan
@@ -221,14 +220,7 @@ class NodesController(rest.RestController):
                 msg = _("Cannot create node with invalid name %(name)s")
                 raise wsme.exc.ClientSideError(msg % {'name': Node.name},
                                               status_code=400)
-                
-        try:
-            objects.Node.get_by_name(pecan.request.context, Node.name)
-        except:
-            raise exception.DuplicateCode(code=Node.code)
         
-        Node.status = 'DISCONNECTED'
-        Node.uuid = uuidutils.generate_uuid()
         new_Node = objects.Node(pecan.request.context,
                                 **Node.as_dict())
         new_Node.create()

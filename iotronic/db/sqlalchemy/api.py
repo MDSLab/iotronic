@@ -258,6 +258,21 @@ class Connection(api.Connection):
         # ensure defaults are present for new nodes
         if 'uuid' not in values:
             values['uuid'] = uuidutils.generate_uuid()
+        if 'status' not in values:
+            values['status'] = states.DISCONNECTED 
+
+        node = models.Node()
+        node.update(values)
+        try:
+            node.save()
+        except db_exc.DBDuplicateEntry as exc:
+            if 'code' in exc.columns:
+                raise exception.DuplicateCode(code=values['code'])
+            raise exception.BoardAlreadyExists(uuid=values['uuid'])
+        return node
+        """
+        if 'uuid' not in values:
+            values['uuid'] = uuidutils.generate_uuid()
         if 'power_state' not in values:
             values['power_state'] = states.NOSTATE
         if 'provision_state' not in values:
@@ -277,6 +292,7 @@ class Connection(api.Connection):
                     node=values['uuid'])
             raise exception.NodeAlreadyExists(uuid=values['uuid'])
         return node
+        """
 
     def get_node_by_id(self, node_id):
         query = model_query(models.Node).filter_by(id=node_id)
@@ -298,6 +314,13 @@ class Connection(api.Connection):
             return query.one()
         except NoResultFound:
             raise exception.NodeNotFound(node=node_name)
+        
+    def get_node_by_code(self, node_code):
+        query = model_query(models.Node).filter_by(code=node_code)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.NodeNotFound(node=node_code)
 
     def get_node_by_instance(self, instance):
         if not uuidutils.is_uuid_like(instance):
@@ -735,31 +758,7 @@ class Connection(api.Connection):
                 board_id = board_ref['id']
 
             query.delete()
-            
 
-    def create_board(self, values):
-        # ensure defaults are present for new boards
-        if 'uuid' not in values:
-            values['uuid'] = uuidutils.generate_uuid()
-        if 'power_state' not in values:
-            values['power_state'] = states.NOSTATE
-        if 'provision_state' not in values:
-            # TODO(deva): change this to ENROLL
-            values['provision_state'] = states.AVAILABLE
-
-        board = models.Board()
-        board.update(values)
-        try:
-            board.save()
-        except db_exc.DBDuplicateEntry as exc:
-            if 'name' in exc.columns:
-                raise exception.DuplicateName(name=values['name'])
-            elif 'instance_uuid' in exc.columns:
-                raise exception.InstanceAssociated(
-                    instance_uuid=values['instance_uuid'],
-                    board=values['uuid'])
-            raise exception.BoardAlreadyExists(uuid=values['uuid'])
-        return board
     
     def get_boardinfo_list(self, columns=None, filters=None, limit=None,
                           marker=None, sort_key=None, sort_dir=None):

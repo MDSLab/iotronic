@@ -146,7 +146,6 @@ This is the provision state used when inspection is started. A successfully
 inspected node shall transition to MANAGEABLE status.
 """
 
-
 INSPECTFAIL = 'inspect failed'
 """ Node inspection failed. """
 
@@ -154,6 +153,9 @@ INSPECTFAIL = 'inspect failed'
 UPDATE_ALLOWED_STATES = (DEPLOYFAIL, INSPECTING, INSPECTFAIL, CLEANFAIL)
 """Transitional states in which we allow updating a node."""
 
+### NEW
+CONNECTED = 'connected'
+DISCONNECTED = 'disconnected'
 
 ##############
 # Power states

@@ -176,6 +176,14 @@ class Connection(object):
         :param instance: The instance name or uuid to search for.
         :returns: A node.
         """
+        
+    @abc.abstractmethod
+    def get_node_by_code(self, instance):
+        """Return a node.
+
+        :param instance: The instance code or uuid to search for.
+        :returns: A node.
+        """
 
     @abc.abstractmethod
     def destroy_node(self, node_id):
