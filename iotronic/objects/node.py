@@ -37,9 +37,7 @@ class Node(base.IotronicObject):
         'device': obj_utils.str_or_none,
         'session': obj_utils.str_or_none,
         'mobile': bool,
-        'location': obj_utils.dict_or_none,
         'extra': obj_utils.dict_or_none,
-        #'reservation': obj_utils.str_or_none,
     }
 
     @staticmethod

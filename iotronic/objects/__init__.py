@@ -15,17 +15,20 @@
 #from iotronic.objects import chassis
 from iotronic.objects import conductor
 from iotronic.objects import node
+from iotronic.objects import location
 #from iotronic.objects import port
 
 
 #Chassis = chassis.Chassis
 Conductor = conductor.Conductor
 Node = node.Node
+Location = location.Location
 #Port = port.Port
 
 __all__ = (
            #Chassis,
            Conductor,
            Node,
+           Location,
            #Port
            )

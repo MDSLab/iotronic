@@ -95,7 +95,7 @@ class Connection(object):
         :param sort_dir: direction in which results should be sorted.
                          (asc, desc)
         """
-
+    '''
     @abc.abstractmethod
     def reserve_node(self, tag, node_id):
         """Reserve a node.
@@ -121,7 +121,7 @@ class Connection(object):
         :raises: NodeNotLocked if the node was found to not have a
                  reservation at all.
         """
-
+    '''
     @abc.abstractmethod
     def create_node(self, values):
         """Create a new node.
@@ -168,7 +168,7 @@ class Connection(object):
         :param node_name: The logical name of a node.
         :returns: A node.
         """
-
+    '''
     @abc.abstractmethod
     def get_node_by_instance(self, instance):
         """Return a node.
@@ -176,6 +176,7 @@ class Connection(object):
         :param instance: The instance name or uuid to search for.
         :returns: A node.
         """
+    '''
         
     @abc.abstractmethod
     def get_node_by_code(self, instance):
@@ -214,7 +215,7 @@ class Connection(object):
         :raises: NodeAssociated
         :raises: NodeNotFound
         """
-
+    '''
     @abc.abstractmethod
     def get_port_by_id(self, port_id):
         """Return a network port representation.
@@ -341,7 +342,8 @@ class Connection(object):
 
         :param chassis_id: The id or the uuid of a chassis.
         """
-
+    '''
+        
     @abc.abstractmethod
     def register_conductor(self, values, update_existing=False):
         """Register an active conductor with the cluster.
@@ -403,10 +405,40 @@ class Connection(object):
         """
 
 
-'''
+
 
 ###################### NEW #############################
+    @abc.abstractmethod
+    def create_location(self, values):
+        """Create a new location.
 
+        :param values: Dict of values.
+        """
+    
+    @abc.abstractmethod
+    def destroy_location(self, location_id):
+        """Destroy an location.
+
+        :param location_id: The id or MAC of a location.
+        """
+
+    @abc.abstractmethod
+    def get_locations_by_node_id(self, node_id, limit=None, marker=None,
+                             sort_key=None, sort_dir=None):
+        """List all the locations for a given node.
+
+        :param node_id: The integer node ID.
+        :param limit: Maximum number of locations to return.
+        :param marker: the last item of the previous page; we return the next
+                       result set.
+        :param sort_key: Attribute by which results should be sorted
+        :param sort_dir: direction in which results should be sorted
+                         (asc, desc)
+        :returns: A list of locations.
+        """
+
+
+'''
     @abc.abstractmethod
     def get_board_by_uuid(self, node_uuid):
         """Return a node.

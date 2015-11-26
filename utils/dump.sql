@@ -37,7 +37,6 @@ CREATE TABLE `nodes` (
   `device` varchar(255) DEFAULT NULL,
   `session` varchar(255) DEFAULT NULL,
   `mobile` tinyint(1) DEFAULT NULL,
-  `location` text,
   `extra` text,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uuid` (`uuid`),
@@ -45,6 +44,23 @@ CREATE TABLE `nodes` (
 ) ENGINE=InnoDB AUTO_INCREMENT=127 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
+DROP TABLE IF EXISTS `locations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `locations` (
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `longitude` varchar(18) DEFAULT NULL,
+  `latitude` varchar(18) DEFAULT NULL,
+  `altitude` varchar(18) DEFAULT NULL,
+  `node_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `node_id` (`node_id`),
+  CONSTRAINT `ports_ibfk_1` FOREIGN KEY (`node_id`) REFERENCES `nodes` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `conductors`

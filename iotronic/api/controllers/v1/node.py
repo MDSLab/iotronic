@@ -4,6 +4,7 @@ from wsme import types as wtypes
 from iotronic import objects
 from iotronic.api.controllers.v1 import types
 from iotronic.api.controllers.v1 import collection
+from iotronic.api.controllers.v1 import location as loc
 from iotronic.api.controllers.v1 import utils as api_utils
 from iotronic.api.controllers import base
 from iotronic.common import exception
@@ -24,15 +25,20 @@ class Node(base.APIBase):
     device= wsme.wsattr(wtypes.text)
     session= wsme.wsattr(wtypes.text)
     mobile=types.boolean
-    location=types.jsontype
+    location=wsme.wsattr([loc.Location])
     extra=types.jsontype
 
     @staticmethod
-    def _convert_with_links(node, url, expand=True, show_password=True):
+    def _convert_with_locates(node, url, expand=True, show_password=True):
         
         if not expand:
             except_list = ['name', 'code', 'status','uuid']
             node.unset_fields_except(except_list)
+            return node
+            
+        list_loc=objects.Location({}).list_by_node_id({},node.id)
+        node.location=loc.Location.convert_with_list(list_loc)
+            
         '''
         else:
             if not show_password:
@@ -47,8 +53,7 @@ class Node(base.APIBase):
                           ]
 
         node.chassis_id = wtypes.Unset
-        '''
-        '''
+
         node.links = [link.Link.make_link('self', url, 'nodes',
                                           node.uuid),
                       link.Link.make_link('bookmark', url, 'nodes',
@@ -58,9 +63,10 @@ class Node(base.APIBase):
         return node
     
     @classmethod
-    def convert_with_links(cls, rpc_node, expand=True):
+    def convert_with_locates(cls, rpc_node, expand=True):
         node = Node(**rpc_node.as_dict())
-        return cls._convert_with_links(node, pecan.request.host_url,
+        node.id=rpc_node.id
+        return cls._convert_with_locates(node, pecan.request.host_url,
                                        expand,
                                        pecan.request.context.show_password)
 
@@ -76,7 +82,7 @@ class Node(base.APIBase):
             
 class NodeCollection(collection.Collection):
     """API representation of a collection of nodes."""
-
+    
     nodes = [Node]
     """A list containing nodes objects"""
 
@@ -84,9 +90,9 @@ class NodeCollection(collection.Collection):
         self._type = 'nodes'
 
     @staticmethod
-    def convert_with_links(nodes, limit, url=None, expand=False, **kwargs):
+    def convert_with_locates(nodes, limit, url=None, expand=False, **kwargs):
         collection = NodeCollection()
-        collection.nodes = [Node.convert_with_links(n, expand) for n in nodes]
+        collection.nodes = [Node.convert_with_locates(n, expand) for n in nodes]
         collection.next = collection.get_next(limit, url=url, **kwargs)
         return collection
     
@@ -97,11 +103,7 @@ class NodesController(rest.RestController):
     def _get_nodes_collection(self, chassis_uuid, instance_uuid, associated,
                               maintenance, marker, limit, sort_key, sort_dir,
                               expand=False, resource_url=None):
-        '''
-        if self.from_chassis and not chassis_uuid:
-            raise exception.MissingParameterValue(
-                _("Chassis id not specified."))
-        '''
+
         limit = api_utils.validate_limit(limit)
         sort_dir = api_utils.validate_sort_dir(sort_dir)
 
@@ -138,7 +140,7 @@ class NodesController(rest.RestController):
         if maintenance:
             parameters['maintenance'] = maintenance
         '''
-        return NodeCollection.convert_with_links(nodes, limit,
+        return NodeCollection.convert_with_locates(nodes, limit,
                                                  url=resource_url,
                                                  expand=expand,
                                                  **parameters)
@@ -179,7 +181,8 @@ class NodesController(rest.RestController):
         """
         rpc_node = api_utils.get_rpc_node(node_ident)
         node = Node(**rpc_node.as_dict())
-        return node
+        node.id=rpc_node.id
+        return Node.convert_with_locates(node)
     
     @expose.expose(None, types.uuid_or_name, status_code=204)
     def delete(self, node_ident):
@@ -201,17 +204,16 @@ class NodesController(rest.RestController):
     @expose.expose(Node, body=Node, status_code=201)
     def post(self,Node):
         """Create a new Node.
-
+        
         :param Node: a Node within the request body.
         """
-
         if not Node.name:
             raise exception.MissingParameterValue(
                 _("Name is not specified."))
         if not Node.code:
             raise exception.MissingParameterValue(
                 _("Code is not specified."))
-        if not Node.location:
+        if not Node.location: 
             raise exception.MissingParameterValue(
                 _("Location is not specified."))
         
@@ -224,6 +226,12 @@ class NodesController(rest.RestController):
         new_Node = objects.Node(pecan.request.context,
                                 **Node.as_dict())
         new_Node.create()
+        
+        new_Location=objects.Location(pecan.request.context,
+                                **Node.location[0].as_dict())
+        new_Location.node_id=new_Node.id
+        new_Location.create()
+        
         #pecan.response.location = link.build_url('Nodes', new_Node.uuid)
-        return Node.convert_with_links(new_Node)
+        return Node.convert_with_locates(new_Node)
 

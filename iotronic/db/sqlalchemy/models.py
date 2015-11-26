@@ -155,7 +155,7 @@ class Node(Base):
     device = Column(String(255), nullable=True)
     session = Column(String(255), nullable=True)
     mobile = Column(Boolean, default=False)
-    location = Column(JSONEncodedDict)
+    #location = Column(JSONEncodedDict)
     extra = Column(JSONEncodedDict)    
 """
     __tablename__ = 'nodes'
@@ -211,6 +211,18 @@ class Node(Base):
     #inspection_started_at = Column(DateTime, nullable=True)
     #extra = Column(JSONEncodedDict)
 """
+
+class Location(Base):
+    """Represents a network port of a bare metal node."""
+
+    __tablename__ = 'locations'
+    __table_args__ = (
+        table_args())
+    id = Column(Integer, primary_key=True)
+    longitude = Column(String(18))
+    latitude = Column(String(18))
+    altitude = Column(String(18))
+    node_id = Column(Integer, ForeignKey('nodes.id'), nullable=True)
 
 class Port(Base):
     """Represents a network port of a bare metal node."""

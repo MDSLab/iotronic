@@ -149,6 +149,16 @@ def _paginate_query(model, limit=None, marker=None, sort_key=None,
             % {'key': sort_key})
     return query.all()
 
+#### NEW
+            
+def add_location_filter_by_node(query, value):
+    if strutils.is_int_like(value):
+        return query.filter_by(node_id=value)
+    else:
+        query = query.join(models.Node,
+                           models.Location.node_id == models.Node.id)
+        return query.filter(models.Node.uuid == value)
+
 
 class Connection(api.Connection):
     """SqlAlchemy connection."""
@@ -216,6 +226,7 @@ class Connection(api.Connection):
         return _paginate_query(models.Node, limit, marker,
                                sort_key, sort_dir, query)
 
+    """
     def reserve_node(self, tag, node_id):
         session = get_session()
         with session.begin():
@@ -253,7 +264,7 @@ class Connection(api.Connection):
                                                    host=node['reservation'])
             except NoResultFound:
                 raise exception.NodeNotFound(node_id)
-
+    """
     def create_node(self, values):
         # ensure defaults are present for new nodes
         if 'uuid' not in values:
@@ -321,7 +332,7 @@ class Connection(api.Connection):
             return query.one()
         except NoResultFound:
             raise exception.NodeNotFound(node=node_code)
-
+    '''
     def get_node_by_instance(self, instance):
         if not uuidutils.is_uuid_like(instance):
             raise exception.InvalidUUID(uuid=instance)
@@ -335,7 +346,7 @@ class Connection(api.Connection):
             raise exception.InstanceNotFound(instance=instance)
 
         return result
-
+    '''
     def destroy_node(self, node_id):
         
         session = get_session()
@@ -351,6 +362,10 @@ class Connection(api.Connection):
             # required for deleting all ports, attached to the node.
             if uuidutils.is_uuid_like(node_id):
                 node_id = node_ref['id']
+                
+            location_query = model_query(models.Location, session=session)
+            location_query = add_location_filter_by_node(location_query, node_id)
+            location_query.delete()
 
             query.delete()
         """
@@ -426,7 +441,7 @@ class Connection(api.Connection):
 
             ref.update(values)
         return ref
-
+    """
     def get_port_by_id(self, port_id):
         query = model_query(models.Port).filter_by(id=port_id)
         try:
@@ -550,7 +565,7 @@ class Connection(api.Connection):
 
     def destroy_chassis(self, chassis_id):
         def chassis_not_empty(session):
-            """Checks whether the chassis does not have nodes."""
+            #Checks whether the chassis does not have nodes.
 
             query = model_query(models.Node, session=session)
             query = add_node_filter_by_chassis(query, chassis_id)
@@ -568,7 +583,7 @@ class Connection(api.Connection):
             count = query.delete()
             if count != 1:
                 raise exception.ChassisNotFound(chassis=chassis_id)
-
+    """
     def register_conductor(self, values, update_existing=False):
         session = get_session()
         with session.begin():
@@ -650,8 +665,32 @@ class Connection(api.Connection):
         return d2c
 
 
-"""
+
 ###################### NEW #############################
+
+    def create_location(self, values):
+        location = models.Location()
+        location.update(values)
+        location.save()
+        return location
+    
+    def destroy_location(self, location_id):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Location, session=session)
+            query = add_location_filter(query, location_id)
+            count = query.delete()
+            if count == 0:
+                raise exception.LocationNotFound(location=location_id)
+    
+    def get_locations_by_node_id(self, node_id, limit=None, marker=None,
+                             sort_key=None, sort_dir=None):
+        query = model_query(models.Location)
+        query = query.filter_by(node_id=node_id)
+        return _paginate_query(models.Location, limit, marker,
+                               sort_key, sort_dir, query)
+        
+"""
     def _add_boards_filters(self, query, filters):
         if filters is None:
             filters = []
