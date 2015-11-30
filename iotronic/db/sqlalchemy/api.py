@@ -270,7 +270,7 @@ class Connection(api.Connection):
         if 'uuid' not in values:
             values['uuid'] = uuidutils.generate_uuid()
         if 'status' not in values:
-            values['status'] = states.DISCONNECTED 
+            values['status'] = states.OPERATIVE 
 
         node = models.Node()
         node.update(values)

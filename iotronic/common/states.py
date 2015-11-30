@@ -154,8 +154,8 @@ UPDATE_ALLOWED_STATES = (DEPLOYFAIL, INSPECTING, INSPECTFAIL, CLEANFAIL)
 """Transitional states in which we allow updating a node."""
 
 ### NEW
-CONNECTED = 'connected'
-DISCONNECTED = 'disconnected'
+OPERATIVE = 'operative'
+MAINTENANCE = 'maintenance'
 
 ##############
 # Power states
