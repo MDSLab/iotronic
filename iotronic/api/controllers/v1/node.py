@@ -31,8 +31,14 @@ class Node(base.APIBase):
     @staticmethod
     def _convert_with_locates(node, url, expand=True, show_password=True):
         
+        try:
+            session=objects.SessionWP({}).get_session_by_node_uuid(node.uuid,valid=True)
+            node.session=session.session_id
+        except:
+            pass
+        
         if not expand:
-            except_list = ['name', 'code', 'status','uuid']
+            except_list = ['name', 'code', 'status','uuid','session']
             node.unset_fields_except(except_list)
             return node
             

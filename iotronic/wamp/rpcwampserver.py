@@ -21,11 +21,11 @@ class RPCWampManager(ApplicationSession):
     def onChallenge(self, challenge):
         print("authentication challenge received")
 
-    #def onLeave(self, details):
-    #    print("session left")
-    #    import os, signal
-    #    os.kill(multi.pid, signal.SIGKILL)
-
+    def onLeave(self, details):
+        print("session left")
+        import os, signal
+        os.kill(multi.pid, signal.SIGKILL)
+        
     def onDisconnect(self):
         print("transport disconnected")
     '''
@@ -34,6 +34,8 @@ class RPCWampManager(ApplicationSession):
     def onJoin(self, details):
         LOG.info('RPC Wamp Session ready')
         import iotronic.wamp.functions as fun
+        self.subscribe(fun.leave_function, 'wamp.session.on_leave')
+
         try:
             yield self.register(fun.test, u'stack4things.conductor.rpc.test')
             yield self.register(fun.registration, u'stack4things.conductor.rpc.registration')

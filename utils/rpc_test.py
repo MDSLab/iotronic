@@ -8,6 +8,7 @@ class RPCCaller(ApplicationSession):
     def onJoin(self, details):
         print("session ready")
         try:
+            #stack4things.iotronic.conductor.function
             res = yield self.call(u'stack4things.conductor.rpc.test',)
             print("call result: {}".format(res))
         except Exception as e:

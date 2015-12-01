@@ -16,7 +16,7 @@ list)  curl -sS $BASE/nodes/ |  python -m json.tool
 echo "";
 ;;
 create-node) curl -sS -H "Content-Type: application/json" -X POST $BASE/nodes/  \
--d '{"code":"'"$2"'","name":"'"$3"'","location":[{"latitude":"'"$4"'","longitude":"'"$5"'","altitude":"'"$6"'"}]}'  | python -m json.tool
+-d '{"device":"arduino","code":"'"$2"'","name":"'"$3"'","location":[{"latitude":"'"$4"'","longitude":"'"$5"'","altitude":"'"$6"'"}]}'  | python -m json.tool
 echo "";
 ;;
 delete-node) curl -sS -X DELETE $BASE/nodes/$2 |  python -m json.tool

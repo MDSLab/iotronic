@@ -408,12 +408,39 @@ class Connection(object):
 
 
 ###################### NEW #############################
+
+    @abc.abstractmethod
+    def create_session(self, values):
+        """Create a new location.
+
+        :param values: session_id.
+        """
+        
+    @abc.abstractmethod
+    def update_session(self, session_id, values):
+        """Update properties of an session.
+
+        :param session_id: The id of a session.
+        :param values: Dict of values to update.
+        :returns: A session.
+        """     
+        
     @abc.abstractmethod
     def create_location(self, values):
         """Create a new location.
 
         :param values: Dict of values.
+        """   
+        
+    @abc.abstractmethod
+    def update_location(self, location_id, values):
+        """Update properties of an location.
+
+        :param location_id: The id of a location.
+        :param values: Dict of values to update.
+        :returns: A location.
         """
+    
     
     @abc.abstractmethod
     def destroy_location(self, location_id):

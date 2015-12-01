@@ -152,7 +152,7 @@ class Node(Base):
     code = Column(String(25))
     status = Column(String(15), nullable=True)
     name = Column(String(255), nullable=True)
-    device = Column(String(255), nullable=True)
+    device = Column(String(255))
     session = Column(String(255), nullable=True)
     mobile = Column(Boolean, default=False)
     #location = Column(JSONEncodedDict)
@@ -213,16 +213,30 @@ class Node(Base):
 """
 
 class Location(Base):
-    """Represents a network port of a bare metal node."""
+    """Represents a location of a node."""
 
     __tablename__ = 'locations'
     __table_args__ = (
         table_args())
     id = Column(Integer, primary_key=True)
-    longitude = Column(String(18))
-    latitude = Column(String(18))
-    altitude = Column(String(18))
-    node_id = Column(Integer, ForeignKey('nodes.id'), nullable=True)
+    longitude = Column(String(18), nullable=True)
+    latitude = Column(String(18), nullable=True)
+    altitude = Column(String(18), nullable=True)
+    node_id = Column(Integer, ForeignKey('nodes.id'))
+
+class SessionWP(Base):
+    """Represents a session of a node."""
+
+    __tablename__ = 'sessions'
+    __table_args__ = (
+        schema.UniqueConstraint('session_id', name='uniq_session_id0session_id'),
+        schema.UniqueConstraint('node_uuid', name='uniq_node_uuid0node_uuid'),
+        table_args())
+    id = Column(Integer, primary_key=True)
+    valid = Column(Boolean, default=True)
+    session_id = Column(String(15))
+    node_uuid = Column(String(36))
+    node_id = Column(Integer, ForeignKey('nodes.id'))
 
 class Port(Base):
     """Represents a network port of a bare metal node."""

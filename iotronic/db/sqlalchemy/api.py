@@ -159,7 +159,6 @@ def add_location_filter_by_node(query, value):
                            models.Location.node_id == models.Node.id)
         return query.filter(models.Node.uuid == value)
 
-
 class Connection(api.Connection):
     """SqlAlchemy connection."""
 
@@ -667,6 +666,24 @@ class Connection(api.Connection):
 
 
 ###################### NEW #############################
+    def create_session(self, values):
+        session = models.SessionWP()
+        session.update(values)
+        session.save()
+        return session
+
+    def update_session(self, ses_id, values):
+        # NOTE(dtantsur): this can lead to very strange errors
+        session = get_session()
+        try:
+            with session.begin():
+                query = model_query(models.SessionWP, session=session)
+                query = add_identity_filter(query, ses_id)
+                ref = query.one()
+                ref.update(values)
+        except NoResultFound:
+            raise exception.SessionWPNotFound(ses=ses_id)
+        return ref
 
     def create_location(self, values):
         location = models.Location()
@@ -674,11 +691,24 @@ class Connection(api.Connection):
         location.save()
         return location
     
+    def update_location(self, location_id, values):
+        # NOTE(dtantsur): this can lead to very strange errors
+        session = get_session()
+        try:
+            with session.begin():
+                query = model_query(models.Location, session=session)
+                query = add_identity_filter(query, location_id)
+                ref = query.one()
+                ref.update(values)
+        except NoResultFound:
+            raise exception.LocationNotFound(location=location_id)
+        return ref
+    
     def destroy_location(self, location_id):
         session = get_session()
         with session.begin():
             query = model_query(models.Location, session=session)
-            query = add_location_filter(query, location_id)
+            query = add_identity_filter(query, location_id)
             count = query.delete()
             if count == 0:
                 raise exception.LocationNotFound(location=location_id)
@@ -690,192 +720,16 @@ class Connection(api.Connection):
         return _paginate_query(models.Location, limit, marker,
                                sort_key, sort_dir, query)
         
-"""
-    def _add_boards_filters(self, query, filters):
-        if filters is None:
-            filters = []
-            
-        if 'chassis_uuid' in filters:
-            # get_chassis_by_uuid() to raise an exception if the chassis
-            # is not found
-            chassis_obj = self.get_chassis_by_uuid(filters['chassis_uuid'])
-            query = query.filter_by(chassis_id=chassis_obj.id)
-        if 'associated' in filters:
-            if filters['associated']:
-                query = query.filter(models.Board.instance_uuid != None)
-            else:
-                query = query.filter(models.Board.instance_uuid == None)
-        if 'reserved' in filters:
-            if filters['reserved']:
-                query = query.filter(models.Board.reservation != None)
-            else:
-                query = query.filter(models.Board.reservation == None)
-        if 'maintenance' in filters:
-            query = query.filter_by(maintenance=filters['maintenance'])
-        if 'driver' in filters:
-            query = query.filter_by(driver=filters['driver'])
-        if 'provision_state' in filters:
-            query = query.filter_by(provision_state=filters['provision_state'])
-        if 'provisioned_before' in filters:
-            limit = (timeutils.utcnow() -
-                     datetime.timedelta(seconds=filters['provisioned_before']))
-            query = query.filter(models.Board.provision_updated_at < limit)
-        if 'inspection_started_before' in filters:
-            limit = ((timeutils.utcnow()) -
-                     (datetime.timedelta(
-                         seconds=filters['inspection_started_before'])))
-            query = query.filter(models.Board.inspection_started_at < limit)
-
-        return query
-    
-    def get_board_by_uuid(self, board_uuid):
-        query = model_query(models.Board).filter_by(uuid=board_uuid)
+    def get_session_by_node_uuid(self, node_uuid, valid):
+        query = model_query(models.SessionWP).filter_by(node_uuid=node_uuid).filter_by(valid=valid)
         try:
             return query.one()
         except NoResultFound:
-            raise exception.NodeNotFound(node=board_uuid)
-
-    def get_board_list(self, filters=None, limit=None, marker=None,
-                      sort_key=None, sort_dir=None):
-        query = model_query(models.Board)
-        query = self._add_boards_filters(query, filters)
-        return _paginate_query(models.Board, limit, marker,
-                               sort_key, sort_dir, query)
-
-    def reserve_board(self, tag, board_id):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Board, session=session)
-            query = add_identity_filter(query, board_id)
-            # be optimistic and assume we usually create a reservation
-            count = query.filter_by(reservation=None).update(
-                {'reservation': tag}, synchronize_session=False)
-            try:
-                board = query.one()
-                if count != 1:
-                    # Nothing updated and board exists. Must already be
-                    # locked.
-                    raise exception.BoardLocked(board=board_id,
-                                               host=board['reservation'])
-                return board
-            except NoResultFound:
-                raise exception.BoardNotFound(board_id)
-
-    def release_board(self, tag, board_id):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Board, session=session)
-            query = add_identity_filter(query, board_id)
-            # be optimistic and assume we usually release a reservation
-            count = query.filter_by(reservation=tag).update(
-                {'reservation': None}, synchronize_session=False)
-            try:
-                if count != 1:
-                    board = query.one()
-                    if board['reservation'] is None:
-                        raise exception.BoardNotLocked(board=board_id)
-                    else:
-                        raise exception.BoardLocked(board=board_id,
-                                                   host=board['reservation'])
-            except NoResultFound:
-                raise exception.BoardNotFound(board_id)
-            
-    def destroy_board(self, board_id):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Board, session=session)
-            query = add_identity_filter(query, board_id)
-
-            try:
-                board_ref = query.one()
-            except NoResultFound:
-                raise exception.BoardNotFound(board=board_id)
-
-            # Get board ID, if an UUID was supplied. The ID is
-            # required for deleting all ports, attached to the board.
-            if uuidutils.is_uuid_like(board_id):
-                board_id = board_ref['id']
-
-            query.delete()
-
-    
-    def get_boardinfo_list(self, columns=None, filters=None, limit=None,
-                          marker=None, sort_key=None, sort_dir=None):
-        # list-ify columns default values because it is bad form
-        # to include a mutable list in function definitions.
-        if columns is None:
-            columns = [models.Board.id]
-        else:
-            columns = [getattr(models.Board, c) for c in columns]
-
-        query = model_query(*columns, base_model=models.Board)
-        query = self._add_boards_filters(query, filters)
-        return _paginate_query(models.Board, limit, marker,
-                               sort_key, sort_dir, query)
-
-    def get_board_list(self, filters=None, limit=None, marker=None,
-                      sort_key=None, sort_dir=None):
-        query = model_query(models.Board)
-        query = self._add_boards_filters(query, filters)
-        return _paginate_query(models.Board, limit, marker,
-                               sort_key, sort_dir, query)
+            return None
         
-    def get_board_by_code(self, board_name):
-        query = model_query(models.Board).filter_by(code=board_name)
+    def get_session_by_session_id(self, session_id):
+        query = model_query(models.SessionWP).filter_by(session_id=session_id)
         try:
             return query.one()
         except NoResultFound:
-            raise exception.BoardNotFound(board=board_name)
-        
-    def update_board(self, board_id, values):
-        if 'uuid' in values:
-            msg = _("Cannot overwrite UUID for an existing Board.")
-            raise exception.InvalidParameterValue(err=msg)
-
-        try:
-            return self._do_update_board(board_id, values)
-        except db_exc.DBDuplicateEntry as e:
-            if 'code' in e.columns:
-                raise exception.DuplicateName(name=values['name'])
-            elif 'uuid' in e.columns:
-                raise exception.BoardAlreadyExists(uuid=values['uuid'])
-                '''
-            elif 'instance_uuid' in e.columns:
-                raise exception.InstanceAssociated(
-                    instance_uuid=values['instance_uuid'],
-                    board=board_id)
-                '''
-            else:
-                raise e
-            
-    def _do_update_board(self, board_id, values):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Board, session=session)
-            query = add_identity_filter(query, board_id)
-            try:
-                ref = query.with_lockmode('update').one()
-            except NoResultFound:
-                raise exception.BoardNotFound(board=board_id)
-            '''
-            # Prevent instance_uuid overwriting
-            if values.get("instance_uuid") and ref.instance_uuid:
-                raise exception.BoardAssociated(
-                    board=board_id, instance=ref.instance_uuid)
-            
-            if 'provision_state' in values:
-                values['provision_updated_at'] = timeutils.utcnow()
-                if values['provision_state'] == states.INSPECTING:
-                    values['inspection_started_at'] = timeutils.utcnow()
-                    values['inspection_finished_at'] = None
-                elif (ref.provision_state == states.INSPECTING and
-                      values['provision_state'] == states.MANAGEABLE):
-                    values['inspection_finished_at'] = timeutils.utcnow()
-                    values['inspection_started_at'] = None
-                elif (ref.provision_state == states.INSPECTING and
-                      values['provision_state'] == states.INSPECTFAIL):
-                    values['inspection_started_at'] = None
-            '''
-            ref.update(values)
-        return ref
-"""
+            return None

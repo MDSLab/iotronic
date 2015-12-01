@@ -36,7 +36,7 @@ CREATE TABLE `nodes` (
   `name` varchar(255) DEFAULT NULL,
   `device` varchar(255) NOT NULL,
   `session` varchar(255) DEFAULT NULL,
-  `mobile` tinyint(1) DEFAULT 0,
+  `mobile` tinyint(1) DEFAULT 0 NOT NULL,
   `extra` text,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uuid` (`uuid`),
@@ -51,14 +51,13 @@ CREATE TABLE `sessions` (
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `valid` tinyint(1) DEFAULT NULL,
-  `session_id` varchar(18) DEFAULT NULL,
-  `node_id` int(11) NOT NULL,
+  `valid` tinyint(1) DEFAULT 1 NOT NULL,
+  `session_id` varchar(18) NOT NULL,
   `node_uuid` varchar(36) NOT NULL,
+  `node_id` int(11) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `session_id` (`session_id`),
-  CONSTRAINT `session_node_id` FOREIGN KEY (`node_id`) REFERENCES `nodes` (`id`),
-  CONSTRAINT `session_node_uuid` FOREIGN KEY (`node_uuid`) REFERENCES `nodes` (`uuid`)
+  CONSTRAINT `session_node_id` FOREIGN KEY (`node_id`) REFERENCES `nodes` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
