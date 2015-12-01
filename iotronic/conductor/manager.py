@@ -718,7 +718,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
                 self.del_host()
         
         from iotronic.wamp.rpcwampserver import RPC_Wamp_Server
-        c=RPC_Wamp_Server('127.0.0.1','8181','s4t')
+        RPC_Wamp_Server()
         
 
 

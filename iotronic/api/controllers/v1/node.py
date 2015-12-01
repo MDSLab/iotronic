@@ -10,7 +10,6 @@ from iotronic.api.controllers import base
 from iotronic.common import exception
 import wsme
 import pecan
-from pecan import rest
 import code
 
 

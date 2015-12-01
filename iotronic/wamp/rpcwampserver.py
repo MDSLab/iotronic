@@ -3,8 +3,23 @@ from autobahn.twisted.wamp import ApplicationSession, ApplicationRunner
 import multiprocessing
 from twisted.internet import reactor
 from oslo_log import log
+from oslo_config import cfg
 
 LOG = log.getLogger(__name__)
+
+wamp_opts = [
+    cfg.StrOpt('wamp_ip',
+               default='127.0.0.1',
+               help=('URL of wamp broker')),
+    cfg.IntOpt('wamp_port',
+               default=8181,
+               help='port wamp broker'),
+    cfg.StrOpt('wamp_realm',
+               default='s4t',
+               help=('realm broker')),
+]
+CONF = cfg.CONF
+CONF.register_opts(wamp_opts, 'wamp')
 
 class RPCWampManager(ApplicationSession):
     
@@ -61,8 +76,11 @@ class RPCWampServer:
         
 class RPC_Wamp_Server:    
     
-    def __init__(self,ip,port,realm):
-        server = RPCWampServer(ip,port,realm)
+    def __init__(self):
+        self.ip=unicode(CONF.wamp.wamp_ip)
+        self.port=unicode(CONF.wamp.wamp_port)
+        self.realm=unicode(CONF.wamp.wamp_realm)
+        server = RPCWampServer(self.ip,self.port,self.realm)
         server.start()
         multi = multiprocessing.Process(target=reactor.run,args=())
         multi.start()

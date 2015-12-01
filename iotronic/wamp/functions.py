@@ -42,5 +42,3 @@ def registration(code_node,session_num):
     session.save()
         
     return unicode(response)
-    
-    '''

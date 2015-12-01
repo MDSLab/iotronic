@@ -117,6 +117,7 @@ class SessionWP(base.IotronicObject):
                                            sort_dir=sort_dir)
         return SessionWP._from_db_object_list(db_sessions, cls, context)
 
+    '''
     @base.remotable_classmethod
     def list_by_node_id(cls, context, node_id, limit=None, marker=None,
                         sort_key=None, sort_dir=None):
@@ -136,7 +137,8 @@ class SessionWP(base.IotronicObject):
                                                   sort_key=sort_key,
                                                   sort_dir=sort_dir)
         return SessionWP._from_db_object_list(db_sessions, cls, context)
-
+    '''
+    
     @base.remotable
     def create(self,context=None):
         """Create a SessionWP record in the DB.

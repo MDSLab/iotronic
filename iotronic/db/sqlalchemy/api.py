@@ -280,29 +280,6 @@ class Connection(api.Connection):
                 raise exception.DuplicateCode(code=values['code'])
             raise exception.BoardAlreadyExists(uuid=values['uuid'])
         return node
-        """
-        if 'uuid' not in values:
-            values['uuid'] = uuidutils.generate_uuid()
-        if 'power_state' not in values:
-            values['power_state'] = states.NOSTATE
-        if 'provision_state' not in values:
-            # TODO(deva): change this to ENROLL
-            values['provision_state'] = states.AVAILABLE
-
-        node = models.Node()
-        node.update(values)
-        try:
-            node.save()
-        except db_exc.DBDuplicateEntry as exc:
-            if 'name' in exc.columns:
-                raise exception.DuplicateName(name=values['name'])
-            elif 'instance_uuid' in exc.columns:
-                raise exception.InstanceAssociated(
-                    instance_uuid=values['instance_uuid'],
-                    node=values['uuid'])
-            raise exception.NodeAlreadyExists(uuid=values['uuid'])
-        return node
-        """
 
     def get_node_by_id(self, node_id):
         query = model_query(models.Node).filter_by(id=node_id)
