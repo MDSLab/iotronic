@@ -18,10 +18,11 @@ def leave_function(session_id):
 
 
 def test():
-    LOG.debug('hellooooooooo')
+    LOG.debug('hello')
     return u'hello!'
 
 def registration(code_node,session_num):
+    LOG.debug('Receved registration from %s with session %s',code_node, session_num)
     response=''
     try:
         node = objects.Node.get_by_code({}, code_node)
@@ -40,5 +41,5 @@ def registration(code_node,session_num):
     session.session_id=session_num
     session.create()
     session.save()
-        
+    
     return unicode(response)

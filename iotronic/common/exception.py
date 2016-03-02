@@ -574,17 +574,3 @@ class PathNotFound(IotronicException):
 class DirectoryNotWritable(IotronicException):
     message = _("Directory %(dir)s is not writable.")
 
-
-#################### new
-class BoardNotFound(NotFound):
-    message = _("Board %(board)s could not be found.")
-    
-class BoardLocked(Conflict):
-    message = _("Board %(board)s is locked by host %(host)s, please retry "
-                "after the current operation is completed.")
-
-class BoardAssociated(InvalidState):
-    message = _("Board %(board)s is associated with instance %(instance)s.")
-
-
-

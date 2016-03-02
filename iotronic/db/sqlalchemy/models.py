@@ -139,7 +139,7 @@ class Conductor(Base):
 
 
 class Node(Base):
-    """Represents a board."""
+    """Represents a Node."""
 
     __tablename__ = 'nodes'
     

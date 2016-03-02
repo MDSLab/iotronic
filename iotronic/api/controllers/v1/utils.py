@@ -103,29 +103,3 @@ def is_valid_node_name(name):
     :returns: True if the name is valid, False otherwise.
     """
     return utils.is_hostname_safe(name) and (not uuidutils.is_uuid_like(name))
-
-
-#################### NEW
-
-def get_rpc_board(board_ident):
-    """Get the RPC board from the board uuid or logical name.
-
-    :param board_ident: the UUID or logical name of a board.
-
-    :returns: The RPC Board.
-    :raises: InvalidUuidOrName if the name or uuid provided is not valid.
-    :raises: BoardNotFound if the board is not found.
-    """
-    # Check to see if the board_ident is a valid UUID.  If it is, treat it
-    # as a UUID.
-    if uuidutils.is_uuid_like(board_ident):
-        return objects.Board.get_by_uuid(pecan.request.context, board_ident)
-
-    # We can refer to boards by their name, if the client supports it
-    if allow_board_logical_names():
-        if utils.is_hostname_safe(board_ident):
-            return objects.Board.get_by_name(pecan.request.context, board_ident)
-        raise exception.InvalidUuidOrName(name=board_ident)
-
-    # Ensure we raise the same exception as we did for the Juno release
-    raise exception.BoardNotFound(board=board_ident)

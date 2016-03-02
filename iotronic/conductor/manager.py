@@ -200,15 +200,6 @@ conductor_opts = [
                      'longer. In an environment where all tenants are '
                      'trusted (eg, because there is only one tenant), '
                      'this option could be safely disabled.'),
-    
-    #################### NEW
-                  
-    cfg.IntOpt('board_locked_retry_attempts',
-               default=3,
-               help='Number of attempts to grab a node lock.'),
-    cfg.IntOpt('board_locked_retry_interval',
-               default=1,
-               help='Seconds to sleep between node lock attempts.'),
 ]
 CONF = cfg.CONF
 CONF.register_opts(conductor_opts, 'conductor')
@@ -2185,7 +2176,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
         :param: last_error: the error message to be updated in node.last_error
 
         """
-        node_iter = self.iter_boards(filters=filters,
+        node_iter = self.iter_nodes(filters=filters,
                                     sort_key=sort_key,
                                     sort_dir='asc')
 
@@ -2213,116 +2204,3 @@ class ConductorManager(periodic_task.PeriodicTasks):
             workers_count += 1
             if workers_count >= CONF.conductor.periodic_max_workers:
                 break
-
-
-    @messaging.expected_exceptions(exception.BoardLocked,
-                                   exception.BoardAssociated,
-                                   exception.InvalidState)
-    def destroy_board(self, context, board_id):
-        """Delete a board.
-
-        :param context: request context.
-        :param board_id: board id or uuid.
-        :raises: BoardLocked if board is locked by another conductor.
-        :raises: BoardAssociated if the board contains an instance
-            associated with it.
-        :raises: InvalidState if the board is in the wrong provision
-            state to perform deletion.
-
-        """
-        #with task_manager.acquire(context, board_id) as task:
-            #board = task.board
-        board = objects.Board.get(context, board_id)
-        board.destroy()
-        LOG.info(_LI('Successfully deleted board %(board)s.'),
-                 {'board': board.uuid})
-            #if board.instance_uuid is not None:
-            #    raise exception.BoardAssociated(board=board.uuid,
-            #                                   instance=board.instance_uuid)
-
-            # TODO(lucasagomes): We should add ENROLLED once it's part of our
-            #                    state machine
-            # NOTE(lucasagomes): For the *FAIL states we users should
-            # move it to a safe state prior to deletion. This is because we
-            # should try to avoid deleting a board in a dirty/whacky state,
-            # e.g: A board in DEPLOYFAIL, if deleted without passing through
-            # tear down/cleaning may leave data from the previous tenant
-            # in the disk. So boards in *FAIL states should first be moved to:
-            # CLEANFAIL -> MANAGEABLE
-            # INSPECTIONFAIL -> MANAGEABLE
-            # DEPLOYFAIL -> DELETING
-            # ZAPFAIL -> MANAGEABLE (in the future)
-        '''
-        valid_states = (states.AVAILABLE, states.NOSTATE,
-                        states.MANAGEABLE)
-        if board.provision_state not in valid_states:
-            msg = (_('Can not delete board "%(board)s" while it is in '
-                     'provision state "%(state)s". Valid provision states '
-                     'to perform deletion are: "%(valid_states)s"') %
-                   {'board': board.uuid, 'state': board.provision_state,
-                    'valid_states': valid_states})
-            raise exception.InvalidState(msg)
-        if board.console_enabled:
-            try:
-                task.driver.console.stop_console(task)
-            except Exception as err:
-                LOG.error(_LE('Failed to stop console while deleting '
-                              'the board %(board)s: %(err)s.'),
-                          {'board': board.uuid, 'err': err})
-        board.destroy()
-        LOG.info(_LI('Successfully deleted board %(board)s.'),
-                 {'board': board.uuid})
-        '''
-            
-    def iter_boards(self, fields=None, **kwargs):
-        """Iterate over boards mapped to this conductor.
-
-        Requests board set from and filters out boards that are not
-        mapped to this conductor.
-
-        Yields tuples (board_uuid, driver, ...) where ... is derived from
-        fields argument, e.g.: fields=None means yielding ('uuid', 'driver'),
-        fields=['foo'] means yielding ('uuid', 'driver', 'foo').
-
-        :param fields: list of fields to fetch in addition to uuid and driver
-        :param kwargs: additional arguments to pass to dbapi when looking for
-                       boards
-        :return: generator yielding tuples of requested fields
-        """
-        columns = ['uuid',] + list(fields or ())
-        board_list = self.dbapi.get_boardinfo_list(columns=columns, **kwargs)
-        for result in board_list:
-            if self._mapped_to_this_conductor(*result[:2]):
-                yield result
-                
-
-    @messaging.expected_exceptions(exception.InvalidParameterValue,
-                                   exception.MissingParameterValue,
-                                   exception.BoardLocked)
-    def update_board(self, context, board_obj):
-        """Update a board with the supplied data.
-
-        This method is the main "hub" for PUT and PATCH requests in the API.
-        It ensures that the requested change is safe to perform,
-        validates the parameters with the board's driver, if necessary.
-
-        :param context: an admin context
-        :param board_obj: a changed (but not saved) board object.
-
-        """
-        board_id = board_obj.uuid
-        LOG.debug("RPC update_board called for board %s." % board_id)
-
-        # NOTE(jroll) clear maintenance_reason if board.update sets
-        # maintenance to False for backwards compatibility, for tools
-        # not using the maintenance endpoint.
-        delta = board_obj.obj_what_changed()
-        if 'maintenance' in delta and not board_obj.maintenance:
-            board_obj.maintenance_reason = None
-
-        driver_name = board_obj.driver if 'driver' in delta else None
-        with task_manager.acquire(context, board_id, shared=False,
-                                  driver_name=driver_name):
-            board_obj.save()
-
-        return board_obj

@@ -504,21 +504,3 @@ class ConductorAPI(object):
         """
         cctxt = self.client.prepare(topic=topic or self.topic, version='1.25')
         return cctxt.call(context, 'destroy_port', port=port)
-
-'''
-######################### NEW
-
-    def destroy_board(self, context, board_id, topic=None):
-        """Delete a board.
-
-        :param context: request context.
-        :param board_id: board id or uuid.
-        :raises: BoardLocked if board is locked by another conductor.
-        :raises: BoardAssociated if the board contains an instance
-            associated with it.
-        :raises: InvalidState if the board is in the wrong provision
-            state to perform deletion.
-        """
-        cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
-        return cctxt.call(context, 'destroy_board', board_id=board_id)
-'''

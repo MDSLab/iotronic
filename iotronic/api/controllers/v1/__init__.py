@@ -23,16 +23,11 @@ from wsme import types as wtypes
 from iotronic.api.controllers import link
 from iotronic.api.controllers.v1 import node
 
-
 '''
-
-
 #from iotronic.api.controllers.v1 import chassis
 #from iotronic.api.controllers.v1 import driver
 
-
 #from iotronic.api.controllers.v1 import port
-from iotronic.api.controllers.v1 import board
 '''
 
 from iotronic.api.controllers import base
@@ -148,9 +143,6 @@ class Controller(rest.RestController):
     #ports = port.PortsController()
     #chassis = chassis.ChassisController()
     #drivers = driver.DriversController()
-    
-    
-    #boards= board.BoardsController()
 
     @expose.expose(V1)
     def get(self):

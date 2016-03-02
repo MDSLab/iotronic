@@ -52,8 +52,8 @@ class RPCWampManager(ApplicationSession):
         self.subscribe(fun.leave_function, 'wamp.session.on_leave')
 
         try:
-            yield self.register(fun.test, u'stack4things.conductor.rpc.test')
-            yield self.register(fun.registration, u'stack4things.conductor.rpc.registration')
+            yield self.register(fun.test, u'stack4things.test')
+            yield self.register(fun.registration, u'stack4things.register')
             
             LOG.info("Procedures registered")
         except Exception as e:
