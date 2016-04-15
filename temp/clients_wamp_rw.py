@@ -31,7 +31,7 @@ from autobahn.twisted.websocket import WampWebSocketClientFactory
 from autobahn.wamp.types import ComponentConfig
 
 from twisted.internet.defer import inlineCallbacks
-from twisted.internet import reactor
+from twisted.internet import reactor, defer
 from twisted.internet.endpoints import clientFromString
 from twisted.python import log
 
@@ -100,7 +100,7 @@ class WampClient():
 	def connect(self, ip, port, realm):
 
 		self._realm = realm
-		self._url = 'ws://'+ip+':'+'/ws'
+		self._url = 'ws://'+ip+':'+port+'/ws'
 		self._reactor_thread = None
 
 		self._session_factoryWriter = None
@@ -117,10 +117,12 @@ class WampClient():
 
 
 		self._factoryReader = WampWebSocketClientFactory(self._session_factoryReader, url = self._url, 
-				debug = self._debug, debug_wamp = self._debug_wamp)
+				#debug = self._debug, debug_wamp = self._debug_wamp
+				)
 		
 		self._factoryWriter = WampWebSocketClientFactory(self._session_factoryWriter, url = self._url, 
-				debug = self._debug, debug_wamp = self._debug_wamp)
+				#debug = self._debug, debug_wamp = self._debug_wamp
+				)
 
 		self._reactor_thread = threading.Thread(target=reactor.run, args=(False,))
 		self._reactor_thread.daemon = True
@@ -141,12 +143,21 @@ class WampClient():
 
 ##        Utility Class to wite on a specific topic  ##
 def writeToTopic(topic, message):
+	def p (x):
+		print x
+		
 	global sessio_writer
 	sessio_writer.publish(topic,message)
+	print 'ooo'
+	try:
+		res = sessio_writer.call(u'stack4things.test',)
+		print (format(res))
+	except Exception as e:
+		print(format(e))
 #######################################################
 
 #####Config paramiters####
-ipWamp = '172.17.3.139'
+ipWamp = '127.0.0.1'
 portWamp ='8181'
 realmWAMP = 's4t'
 ##Topic Scrittura; Msg

@@ -21,7 +21,7 @@ wamp_opts = [
 CONF = cfg.CONF
 CONF.register_opts(wamp_opts, 'wamp')
 
-class RPCWampManager(ApplicationSession):
+class RPCWampServerManager(ApplicationSession):
     
     def __init__(self, config=None):
         ApplicationSession.__init__(self, config)
@@ -54,6 +54,7 @@ class RPCWampManager(ApplicationSession):
         try:
             yield self.register(fun.test, u'stack4things.test')
             yield self.register(fun.registration, u'stack4things.register')
+            yield self.register(fun.registration_uuid, u'stack4things.register_uuid')
             
             LOG.info("Procedures registered")
         except Exception as e:
@@ -70,8 +71,7 @@ class RPCWampServer:
                                         )
 
     def start(self):
-        # Pass start_reactor=False to all runner.run() calls
-        self.runner.run(RPCWampManager, start_reactor=False)
+        self.runner.run(RPCWampServerManager, start_reactor=False)
         
         
 class RPC_Wamp_Server:    
@@ -85,4 +85,3 @@ class RPC_Wamp_Server:
         multi = multiprocessing.Process(target=reactor.run,args=())
         multi.start()
         
-

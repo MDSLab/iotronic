@@ -44,9 +44,8 @@ class BaseWBClient(object):
 
     def connect(self):
         
-        log.msg("Connecting to 172.17.3.139:8282")
         self.factory = _WebSocketClientFactory(
-                                "ws://172.17.3.139:8282",
+                                "ws://172.17.4.26:8181",
                                 debug=True)
         self.factory.base_client = self
         
@@ -91,7 +90,7 @@ def Ppippo(coda):
 
 if __name__ == '__main__':
     
-    ws_setting = {'host':'172.17.3.139', 'port':8080}
+    ws_setting = {'host':'172.17.4.126', 'port':8181}
 
     client = BaseWBClient(ws_setting)
 
@@ -101,7 +100,7 @@ if __name__ == '__main__':
     t1.start()
 
     #client.connect()
-    #client.send_message('pippo')
+    client.send_message('pippo')
 
     
     
