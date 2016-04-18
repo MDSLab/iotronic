@@ -217,6 +217,7 @@ CLEANING_INTERFACE_PRIORITY = {
 }
 
 
+'''
 def get_vendor_passthru_metadata(route_dict):
     d = {}
     for method, metadata in route_dict.items():
@@ -606,7 +607,7 @@ def set_node_cleaning_steps(task):
     node.clean_step = {}
     node.save()
 
-
+'''
 # NEW
 
 
@@ -800,6 +801,35 @@ class ConductorManager(periodic_task.PeriodicTasks):
 
         return node_obj
 
+    @messaging.expected_exceptions(exception.NodeLocked,
+                                   exception.NodeNotConnected,
+                                   exception.InvalidState)
+    def destroy_node(self, context, node_id):
+        """Delete a node.
+
+        :param context: request context.
+        :param node_id: node id or uuid.
+        :raises: NodeLocked if node is locked by another conductor.
+        :raises: NodeNotConnected if the node is not connected
+        :raises: InvalidState if the node is in the wrong provision
+            state to perform deletion.
+
+        """
+
+        with task_manager.acquire(context, node_id) as task:
+            node = task.node
+            r = WampResponse()
+            r.clearConfig()
+            response = self.wamp.rpc_call(
+                'stack4things.' + node.uuid + '.configure',
+                r.getResponse())
+            if response['result'] == 0:
+                node.destroy()
+                LOG.info(_LI('Successfully deleted node %(node)s.'),
+                         {'node': node.uuid})
+            else:
+                raise exception.NodeNotConnected(node=node.uuid)
+'''
     @messaging.expected_exceptions(exception.InvalidParameterValue,
                                    exception.MissingParameterValue,
                                    exception.NoFreeConductorWorker,
@@ -1671,35 +1701,6 @@ class ConductorManager(periodic_task.PeriodicTasks):
         return ret_dict
 
     @messaging.expected_exceptions(exception.NodeLocked,
-                                   exception.NodeNotConnected,
-                                   exception.InvalidState)
-    def destroy_node(self, context, node_id):
-        """Delete a node.
-
-        :param context: request context.
-        :param node_id: node id or uuid.
-        :raises: NodeLocked if node is locked by another conductor.
-        :raises: NodeNotConnected if the node is not connected
-        :raises: InvalidState if the node is in the wrong provision
-            state to perform deletion.
-
-        """
-
-        with task_manager.acquire(context, node_id) as task:
-            node = task.node
-            r = WampResponse()
-            r.clearConfig()
-            response = self.wamp.rpc_call(
-                'stack4things.' + node.uuid + '.configure',
-                r.getResponse())
-            if response['result'] == 0:
-                node.destroy()
-                LOG.info(_LI('Successfully deleted node %(node)s.'),
-                         {'node': node.uuid})
-            else:
-                raise exception.NodeNotConnected(node=node.uuid)
-
-    @messaging.expected_exceptions(exception.NodeLocked,
                                    exception.NodeNotFound)
     def destroy_port(self, context, port):
         """Delete a port.
@@ -2174,3 +2175,4 @@ class ConductorManager(periodic_task.PeriodicTasks):
             workers_count += 1
             if workers_count >= CONF.conductor.periodic_max_workers:
                 break
+'''
