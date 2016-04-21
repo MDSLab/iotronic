@@ -1,0 +1,70 @@
+CHANGES
+=======
+
+* cleaning
+* added logs values on cleaning config
+* Starting wamp rpc implementation
+* remove unused import
+* Applied cookiecutter template
+* Modified description in README file
+* cleaning and starting with wamprpc
+* new oslo conf for rpc wamp server - removed useless code
+* added SessionWP Manager
+* fix tables and added new table session
+* updated status
+* added location (create and delete) for the node object
+* fix unique code and add status
+* check if code already exists during the creation of the node via rest
+* added post parameters
+* added new fields for node object
+* rename Board -> Node
+* skip http restarting on building
+* add pretty text
+* added log class
+* added log class
+* improved registration proceadure
+* first example of registration rpc
+* added functions.py file to manage rpc functions on an external file
+* remove Parser dependency
+* tester files for rpc
+* clean clientwamp and added new rpc server class
+* cleaning and fix chat_wamp
+* updated clientwamp with fix and variable topic
+* added wamp package and wamp client
+* update for the client tester
+* cleaned bin files
+* simple client wamp with chat features
+* fix creation board request
+* fake create board for testing
+* added script client tester
+* generalized iotronic.conf
+* cleaned config files
+* some modifications in the configuration files
+* added dump db sql
+* start
+* Cleaned directory
+* production setting
+* production setting
+* production setting
+* Modified repository structure
+* test for new python version
+* adjustmentsfor demo
+* adjustments for demo
+* adjustments for demo
+* adjustments for demo
+* adjustments for demo
+* adjustments for demo
+* adjustments for demo
+* adjustments for demo
+* adjustments for demo
+* adjustments for demo
+* adjustments for demo
+* adjustments for demo: bug fix
+* adjustmentsfor demo:: insert REST calls for osjs, pinMode, digital and analog write
+* adjustments for demo
+* added test
+* alpha version of iotronic node and partial version of iotronic python
+* add alpha version in python
+* modified .gitignore insert readme.md
+* add LINCENSE and alpha version in node
+* first commit
