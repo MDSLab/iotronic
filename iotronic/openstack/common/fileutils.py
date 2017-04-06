@@ -15,12 +15,12 @@
 
 import contextlib
 import errno
-import logging
 import os
 import stat
 import tempfile
 
 from oslo_utils import excutils
+from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
 

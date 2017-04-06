@@ -29,7 +29,6 @@ import six
 from iotronic.common.i18n import _
 from iotronic.common.i18n import _LE
 
-
 LOG = logging.getLogger(__name__)
 
 exc_log_opts = [
@@ -139,33 +138,24 @@ class InvalidState(Conflict):
     message = _("Invalid resource state.")
 
 
-class NodeAlreadyExists(Conflict):
-    message = _("A node with UUID %(uuid)s already exists.")
+class BoardAlreadyExists(Conflict):
+    message = _("A board with UUID %(uuid)s already exists.")
 
 
 class MACAlreadyExists(Conflict):
     message = _("A port with MAC address %(mac)s already exists.")
 
 
-class ChassisAlreadyExists(Conflict):
-    message = _("A chassis with UUID %(uuid)s already exists.")
-
-
 class PortAlreadyExists(Conflict):
     message = _("A port with UUID %(uuid)s already exists.")
 
 
-class InstanceAssociated(Conflict):
-    message = _("Instance %(instance_uuid)s is already associated with a node,"
-                " it cannot be associated with this other node %(node)s")
-
-
 class DuplicateName(Conflict):
-    message = _("A node with name %(name)s already exists.")
+    message = _("A board with name %(name)s already exists.")
 
 
 class DuplicateCode(Conflict):
-    message = _("A node with code %(code)s already exists.")
+    message = _("A board with code %(code)s already exists.")
 
 
 class InvalidUUID(Invalid):
@@ -190,7 +180,7 @@ class InvalidMAC(Invalid):
 
 class InvalidStateRequested(Invalid):
     message = _('The requested action "%(action)s" can not be performed '
-                'on node "%(node)s" while it is in state "%(state)s".')
+                'on board "%(board)s" while it is in state "%(state)s".')
 
 
 class PatchError(Invalid):
@@ -249,16 +239,16 @@ class InstanceNotFound(NotFound):
     message = _("Instance %(instance)s could not be found.")
 
 
-class NodeNotFound(NotFound):
-    message = _("Node %(node)s could not be found.")
+class BoardNotFound(NotFound):
+    message = _("Board %(board)s could not be found.")
 
 
-class NodeNotConnected(Invalid):
-    message = _("Node %(node)s is not connected.")
+class BoardNotConnected(Invalid):
+    message = _("Board %(board)s is not connected.")
 
 
-class NodeAssociated(InvalidState):
-    message = _("Node %(node)s is associated with instance %(instance)s.")
+class BoardAssociated(InvalidState):
+    message = _("Board %(board)s is associated with instance %(instance)s.")
 
 
 class PortNotFound(NotFound):
@@ -281,10 +271,6 @@ class FailedToUpdateMacOnPort(IotronicException):
     message = _("Update MAC address on port: %(port_id)s failed.")
 
 
-class ChassisNotFound(NotFound):
-    message = _("Chassis %(chassis)s could not be found.")
-
-
 class NoDriversLoaded(IotronicException):
     message = _("Conductor %(conductor)s cannot be started "
                 "because no drivers were loaded.")
@@ -298,8 +284,20 @@ class ConductorAlreadyRegistered(IotronicException):
     message = _("Conductor %(conductor)s already registered.")
 
 
+class WampAgentNotFound(NotFound):
+    message = _("WampAgent %(wampagent)s could not be found.")
+
+
+class WampRegistrationAgentNotFound(NotFound):
+    message = _("No Wamp Registration Agent could not be found.")
+
+
+class WampAgentAlreadyRegistered(IotronicException):
+    message = _("WampAgent %(wampagent)s already registered.")
+
+
 class PowerStateFailure(InvalidState):
-    message = _("Failed to set node power state to %(pstate)s.")
+    message = _("Failed to set board power state to %(pstate)s.")
 
 
 class ExclusiveLockRequired(NotAuthorized):
@@ -307,23 +305,18 @@ class ExclusiveLockRequired(NotAuthorized):
                 "but the current context has a shared lock.")
 
 
-class NodeMaintenanceFailure(Invalid):
+class BoardMaintenanceFailure(Invalid):
     message = _("Failed to toggle maintenance-mode flag "
-                "for node %(node)s: %(reason)s")
+                "for board %(board)s: %(reason)s")
 
 
-class NodeConsoleNotEnabled(Invalid):
-    message = _("Console access is not enabled on node %(node)s")
+class BoardConsoleNotEnabled(Invalid):
+    message = _("Console access is not enabled on board %(board)s")
 
 
-class NodeInMaintenance(Invalid):
-    message = _("The %(op)s operation can't be performed on node "
-                "%(node)s because it's in maintenance mode.")
-
-
-class ChassisNotEmpty(Invalid):
-    message = _("Cannot complete the requested action because chassis "
-                "%(chassis)s contains nodes.")
+class BoardInMaintenance(Invalid):
+    message = _("The %(op)s operation can't be performed on board "
+                "%(board)s because it's in maintenance mode.")
 
 
 class IPMIFailure(IotronicException):
@@ -407,7 +400,7 @@ class ServiceUnavailable(IotronicException):
 
 
 class Forbidden(IotronicException):
-    message = _("Requested OpenStack Images API is forbidden")
+    message = _("Requested Iotronic API is forbidden")
 
 
 class BadRequest(IotronicException):
@@ -422,8 +415,8 @@ class CommunicationError(IotronicException):
     message = _("Unable to communicate with the server.")
 
 
-class HTTPForbidden(Forbidden):
-    pass
+class HTTPForbidden(NotAuthorized):
+    message = _("Access was denied to the following resource: %(resource)s")
 
 
 class Unauthorized(IotronicException):
@@ -438,13 +431,13 @@ class ConfigNotFound(IotronicException):
     message = _("Could not find config at %(path)s")
 
 
-class NodeLocked(Conflict):
-    message = _("Node %(node)s is locked by host %(host)s, please retry "
+class BoardLocked(Conflict):
+    message = _("Board %(board)s is locked by host %(host)s, please retry "
                 "after the current operation is completed.")
 
 
-class NodeNotLocked(Invalid):
-    message = _("Node %(node)s found not to be locked on release")
+class BoardNotLocked(Invalid):
+    message = _("Board %(board)s found not to be locked on release")
 
 
 class NoFreeConductorWorker(TemporaryFailure):
@@ -525,12 +518,12 @@ class DracInvalidFilterDialect(IotronicException):
 
 
 class FailedToGetSensorData(IotronicException):
-    message = _("Failed to get sensor data for node %(node)s. "
+    message = _("Failed to get sensor data for board %(board)s. "
                 "Error: %(error)s")
 
 
 class FailedToParseSensorData(IotronicException):
-    message = _("Failed to parse sensor data for node %(node)s. "
+    message = _("Failed to parse sensor data for board %(board)s. "
                 "Error: %(error)s")
 
 
@@ -570,8 +563,8 @@ class HardwareInspectionFailure(IotronicException):
     message = _("Failed to inspect hardware. Reason: %(error)s")
 
 
-class NodeCleaningFailure(IotronicException):
-    message = _("Failed to clean node %(node)s: %(reason)s")
+class BoardCleaningFailure(IotronicException):
+    message = _("Failed to clean board %(board)s: %(reason)s")
 
 
 class PathNotFound(IotronicException):
@@ -580,3 +573,23 @@ class PathNotFound(IotronicException):
 
 class DirectoryNotWritable(IotronicException):
     message = _("Directory %(dir)s is not writable.")
+
+
+class PluginNotFound(NotFound):
+    message = _("Plugin %(plugin)s could not be found.")
+
+
+class InjectionPluginNotFound(NotFound):
+    message = _("InjectionPlugin could not be found.")
+
+
+class InvalidPluginAction(Invalid):
+    message = _("Invalid Action %(action)s for the plugin.")
+
+
+class NeedParams(Invalid):
+    message = _("Action %(action)s needs parameters.")
+
+
+class ErrorExecutionOnBoard(IotronicException):
+    message = _("Error in the execution of %(call)s on %(board)s: %(error)s")

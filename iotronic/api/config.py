@@ -25,19 +25,9 @@ app = {
     'root': 'iotronic.api.controllers.root.RootController',
     'modules': ['iotronic.api'],
     'static_root': '%(confdir)s/public',
-    'debug': True,
-    'enable_acl': True,
+    'debug': False,
     'acl_public_routes': [
         '/',
         '/v1',
-        # '/v1/drivers/[a-z_]*/vendor_passthru/lookup',
-        # '/v1/nodes/[a-z0-9\-]+/vendor_passthru/heartbeat',
-        '/v1/nodes/[a-z0-9\-]',
     ],
-}
-
-# WSME Configurations
-# See https://wsme.readthedocs.org/en/latest/integrate.html#configuration
-wsme = {
-    'debug': False,
 }

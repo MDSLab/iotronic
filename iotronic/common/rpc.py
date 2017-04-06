@@ -35,7 +35,6 @@ __all__ = [
 ]
 
 CONF = cfg.CONF
-# print CONF.transport_url
 TRANSPORT = None
 NOTIFIER = None
 
@@ -120,7 +119,6 @@ class RequestContextSerializer(messaging.Serializer):
 
 
 def get_transport_url(url_str=None):
-    # LOG.info('yoooooooooooo')
     return messaging.TransportURL.parse(CONF, url_str, TRANSPORT_ALIASES)
 
 

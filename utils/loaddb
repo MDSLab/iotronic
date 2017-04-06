@@ -1,0 +1,3 @@
+#! /bin/bash
+
+mysql -u iotronic -h$1 -p iotronic < iotronic.sql

@@ -24,9 +24,7 @@ from iotronic.common.i18n import _
 from iotronic.common import utils
 from iotronic import objects
 
-
 CONF = cfg.CONF
-
 
 JSONPATCH_EXCEPTIONS = (jsonpatch.JsonPatchException,
                         jsonpatch.JsonPointerException,
@@ -67,41 +65,100 @@ def get_patch_value(patch, path):
             return p['value']
 
 
-def allow_node_logical_names():
+def allow_board_logical_names():
     # v1.5 added logical name aliases
     return pecan.request.version.minor >= 5
 
 
-def get_rpc_node(node_ident):
-    """Get the RPC node from the node uuid or logical name.
+def get_rpc_board(board_ident):
+    """Get the RPC board from the board uuid or logical name.
 
-    :param node_ident: the UUID or logical name of a node.
+    :param board_ident: the UUID or logical name of a board.
 
-    :returns: The RPC Node.
+    :returns: The RPC Board.
     :raises: InvalidUuidOrName if the name or uuid provided is not valid.
-    :raises: NodeNotFound if the node is not found.
+    :raises: BoardNotFound if the board is not found.
     """
-    # Check to see if the node_ident is a valid UUID.  If it is, treat it
+    # Check to see if the board_ident is a valid UUID.  If it is, treat it
     # as a UUID.
-    if uuidutils.is_uuid_like(node_ident):
-        return objects.Node.get_by_uuid(pecan.request.context, node_ident)
+    if uuidutils.is_uuid_like(board_ident):
+        return objects.Board.get_by_uuid(pecan.request.context, board_ident)
 
-    # We can refer to nodes by their name, if the client supports it
-    if allow_node_logical_names():
-        if utils.is_hostname_safe(node_ident):
-            return objects.Node.get_by_name(pecan.request.context, node_ident)
-        raise exception.InvalidUuidOrName(name=node_ident)
+    # We can refer to boards by their name, if the client supports it
+    # if allow_board_logical_names():
+    #    if utils.is_hostname_safe(board_ident):
+    else:
+        return objects.Board.get_by_name(pecan.request.context, board_ident)
 
-    # Ensure we raise the same exception as we did for the Juno release
-    raise exception.NodeNotFound(node=node_ident)
+    raise exception.InvalidUuidOrName(name=board_ident)
+
+    raise exception.BoardNotFound(board=board_ident)
 
 
-def is_valid_node_name(name):
-    """Determine if the provided name is a valid node name.
+def get_rpc_plugin(plugin_ident):
+    """Get the RPC plugin from the plugin uuid or logical name.
 
-    Check to see that the provided node name is valid, and isn't a UUID.
+    :param plugin_ident: the UUID or logical name of a plugin.
 
-    :param: name: the node name to check.
+    :returns: The RPC Plugin.
+    :raises: InvalidUuidOrName if the name or uuid provided is not valid.
+    :raises: PluginNotFound if the plugin is not found.
+    """
+    # Check to see if the plugin_ident is a valid UUID.  If it is, treat it
+    # as a UUID.
+    if uuidutils.is_uuid_like(plugin_ident):
+        return objects.Plugin.get_by_uuid(pecan.request.context, plugin_ident)
+
+    # We can refer to plugins by their name, if the client supports it
+    # if allow_plugin_logical_names():
+    #    if utils.is_hostname_safe(plugin_ident):
+    else:
+        return objects.Plugin.get_by_name(pecan.request.context, plugin_ident)
+
+    raise exception.InvalidUuidOrName(name=plugin_ident)
+
+    raise exception.PluginNotFound(plugin=plugin_ident)
+
+
+def is_valid_board_name(name):
+    """Determine if the provided name is a valid board name.
+
+    Check to see that the provided board name is valid, and isn't a UUID.
+
+    :param: name: the board name to check.
     :returns: True if the name is valid, False otherwise.
     """
     return utils.is_hostname_safe(name) and (not uuidutils.is_uuid_like(name))
+
+
+def is_valid_name(name):
+    """Determine if the provided name is a valid name.
+
+    Check to see that the provided board name isn't a UUID.
+
+    :param: name: the board name to check.
+    :returns: True if the name is valid, False otherwise.
+    """
+    return not uuidutils.is_uuid_like(name)
+
+
+def is_valid_logical_name(name):
+    """Determine if the provided name is a valid hostname."""
+
+    return utils.is_valid_logical_name(name)
+
+
+def check_for_invalid_fields(fields, object_fields):
+    """Check for requested non-existent fields.
+
+    Check if the user requested non-existent fields.
+
+    :param fields: A list of fields requested by the user
+    :object_fields: A list of fields supported by the object.
+    :raises: InvalidParameterValue if invalid fields were requested.
+
+    """
+    invalid_fields = set(fields) - set(object_fields)
+    if invalid_fields:
+        raise exception.InvalidParameterValue(
+            _('Field(s) "%s" are not valid') % ', '.join(invalid_fields))

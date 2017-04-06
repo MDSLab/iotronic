@@ -22,7 +22,7 @@ from iotronic import version
 
 
 def parse_args(argv, default_config_files=None):
-    rpc.set_defaults(control_exchange='iotronic')
+    rpc.set_defaults(control_exchange='openstack')
     cfg.CONF(argv[1:],
              project='iotronic',
              version=version.version_info.release_string(),

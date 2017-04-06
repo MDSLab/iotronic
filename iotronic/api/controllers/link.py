@@ -21,7 +21,7 @@ from iotronic.api.controllers import base
 
 def build_url(resource, resource_args, bookmark=False, base_url=None):
     if base_url is None:
-        base_url = pecan.request.host_url
+        base_url = pecan.request.public_url
 
     template = '%(url)s/%(res)s' if bookmark else '%(url)s/v1/%(res)s'
     # FIXME(lucasagomes): I'm getting a 404 when doing a GET on
@@ -49,10 +49,3 @@ class Link(base.APIBase):
         href = build_url(resource, resource_args,
                          bookmark=bookmark, base_url=url)
         return Link(href=href, rel=rel_name, type=type)
-
-    @classmethod
-    def sample(cls):
-        sample = cls(href="http://localhost:6385/chassis/"
-                          "eaaca217-e7d8-47b4-bb41-3f99f20eed89",
-                     rel="bookmark")
-        return sample

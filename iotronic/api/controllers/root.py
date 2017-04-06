@@ -14,36 +14,55 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from iotronic.api.controllers import base
+from iotronic.api.controllers import link
+from iotronic.api.controllers import v1
+from iotronic.api.controllers.v1 import versions
+from iotronic.api import expose
 import pecan
 from pecan import rest
 from wsme import types as wtypes
 
-from iotronic.api.controllers import base
-from iotronic.api.controllers import link
-from iotronic.api.controllers import v1
-from iotronic.api import expose
+ID_VERSION1 = 'v1'
 
 
 class Version(base.APIBase):
-    """An API version representation."""
+    """An API version representation.
+
+    This class represents an API version, including the minimum and
+    maximum minor versions that are supported within the major version.
+    """
 
     id = wtypes.text
-    """The ID of the version, also acts as the release number"""
+    """The ID of the (major) version, also acts as the release number"""
 
     links = [link.Link]
     """A Link that point to a specific version of the API"""
 
-    @staticmethod
-    def convert(id):
-        version = Version()
-        version.id = id
-        version.links = [link.Link.make_link('self', pecan.request.host_url,
-                                             id, '', bookmark=True)]
-        return version
+    status = wtypes.text
+    """Status of the version.
+    One of:
+    * CURRENT - the latest version of API,
+    * SUPPORTED - supported, but not latest, version of API,
+    * DEPRECATED - supported, but deprecated, version of API.
+    """
+
+    version = wtypes.text
+    """The current, maximum supported (major.minor) version of API."""
+
+    min_version = wtypes.text
+    """Minimum supported (major.minor) version of API."""
+
+    def __init__(self, id, min_version, version, status='CURRENT'):
+        self.id = id
+        self.links = [link.Link.make_link('self', pecan.request.public_url,
+                                          self.id, '', bookmark=True)]
+        self.status = status
+        self.version = version
+        self.min_version = min_version
 
 
 class Root(base.APIBase):
-
     name = wtypes.text
     """The name of the API"""
 
@@ -62,17 +81,18 @@ class Root(base.APIBase):
         root.name = "OpenStack Iotronic API"
         root.description = ("Iotronic is an OpenStack project which aims to "
                             "provision baremetal machines.")
-        root.versions = [Version.convert('v1')]
-        root.default_version = Version.convert('v1')
+        root.default_version = Version(ID_VERSION1,
+                                       versions.MIN_VERSION_STRING,
+                                       versions.MAX_VERSION_STRING)
+        root.versions = [root.default_version]
         return root
 
 
 class RootController(rest.RestController):
-
-    _versions = ['v1']
+    _versions = [ID_VERSION1]
     """All supported API versions"""
 
-    _default_version = 'v1'
+    _default_version = ID_VERSION1
     """The default API version"""
 
     v1 = v1.Controller()
@@ -86,11 +106,9 @@ class RootController(rest.RestController):
 
     @pecan.expose()
     def _route(self, args):
-        """Overrides the default routing behavior.
-
-        It redirects the request to the default version of the iotronic API
-        if the version number is not specified in the url.
-        """
+        # Overrides the default routing behavior.
+        # It redirects the request to the default version of the ironic API
+        # if the version number is not specified in the url.
 
         if args[0] and args[0] not in self._versions:
             args = [self._default_version] + args

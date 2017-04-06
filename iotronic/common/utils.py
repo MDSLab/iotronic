@@ -177,35 +177,6 @@ def is_valid_mac(address):
             re.match(m, address.lower()))
 
 
-def is_hostname_safe(hostname):
-    """Determine if the supplied hostname is RFC compliant.
-
-    Check that the supplied hostname conforms to:
-        * http://en.wikipedia.org/wiki/Hostname
-        * http://tools.ietf.org/html/rfc952
-        * http://tools.ietf.org/html/rfc1123
-    Allowing for hostnames, and hostnames + domains.
-
-    :param hostname: The hostname to be validated.
-    :returns: True if valid. False if not.
-
-    """
-    if not isinstance(hostname, six.string_types) or len(hostname) > 255:
-        return False
-
-    # Periods on the end of a hostname are ok, but complicates the
-    # regex so we'll do this manually
-    if hostname.endswith('.'):
-        hostname = hostname[:-1]
-
-    host = '[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?'
-    domain = '[a-z0-9\-_]{0,62}[a-z0-9]'
-
-    m = '^' + host + '(\.' + domain + ')*$'
-
-    return re.match(m, hostname) is not None
-
-
 def validate_and_normalize_mac(address):
     """Validate a MAC address and return normalized form.
 
@@ -256,8 +227,7 @@ def is_valid_cidr(address):
     # Verify it here
     ip_segment = address.split('/')
 
-    if (len(ip_segment) <= 1 or
-            ip_segment[1] == ''):
+    if (len(ip_segment) <= 1 or ip_segment[1] == ''):
         return False
 
     return True
@@ -350,6 +320,7 @@ def temporary_mutation(obj, **kwargs):
         with temporary_mutation(context, read_deleted="yes"):
             do_something_that_needed_deleted_objects()
     """
+
     def is_dict_like(thing):
         return hasattr(thing, 'has_key')
 
@@ -501,7 +472,7 @@ def mount(src, dest, *args):
     :raises: processutils.ProcessExecutionError if it failed
         to run the process.
     """
-    args = ('mount', ) + args + (src, dest)
+    args = ('mount',) + args + (src, dest)
     execute(*args, run_as_root=True, check_exit_code=[0])
 
 
@@ -514,7 +485,7 @@ def umount(loc, *args):
     :raises: processutils.ProcessExecutionError if it failed
         to run the process.
     """
-    args = ('umount', ) + args + (loc, )
+    args = ('umount',) + args + (loc,)
     execute(*args, run_as_root=True, check_exit_code=[0])
 
 
@@ -557,8 +528,9 @@ def check_dir(directory_to_check=None, required_space=1):
     """
     # check if directory_to_check is passed in, if not set to tempdir
     if directory_to_check is None:
-        directory_to_check = (tempfile.gettempdir() if CONF.tempdir
-                              is None else CONF.tempdir)
+        directory_to_check = (
+            tempfile.gettempdir()
+            if CONF.tempdir is None else CONF.tempdir)
 
     LOG.debug("checking directory: %s", directory_to_check)
 
@@ -597,3 +569,49 @@ def _check_dir_free_space(chk_dir, required_space=1):
         raise exception.InsufficientDiskSpace(path=chk_dir,
                                               required=required_space,
                                               actual=free_space)
+
+
+_is_valid_logical_name_re = re.compile(r'^[A-Z0-9-._~]+$', re.I)
+
+# old is_hostname_safe() regex, retained for backwards compat
+_is_hostname_safe_re = re.compile(r"""^
+[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?  # host
+(\.[a-z0-9\-_]{0,62}[a-z0-9])*       # domain
+\.?                                  # trailing dot
+$""", re.X)
+
+
+def is_valid_logical_name(hostname):
+    """Determine if a logical name is valid.
+
+    The logical name may only consist of RFC3986 unreserved
+    characters, to wit:
+
+        ALPHA / DIGIT / "-" / "." / "_" / "~"
+    """
+    if not isinstance(hostname, six.string_types) or len(hostname) > 255:
+        return False
+
+    return _is_valid_logical_name_re.match(hostname) is not None
+
+
+def is_hostname_safe(hostname):
+    """Old check for valid logical board names.
+
+    Retained for compatibility with REST API < 1.10.
+
+    Nominally, checks that the supplied hostname conforms to:
+        * http://en.wikipedia.org/wiki/Hostname
+        * http://tools.ietf.org/html/rfc952
+        * http://tools.ietf.org/html/rfc1123
+
+    In practice, this check has several shortcomings and errors that
+    are more thoroughly documented in bug #1468508.
+
+    :param hostname: The hostname to be validated.
+    :returns: True if valid. False if not.
+    """
+    if not isinstance(hostname, six.string_types) or len(hostname) > 255:
+        return False
+
+    return _is_hostname_safe_re.match(hostname) is not None

@@ -15,7 +15,7 @@
 #    under the License.
 
 """
-SQLAlchemy models for baremetal data.
+SQLAlchemy models for iot data.
 """
 
 import json
@@ -33,7 +33,6 @@ from sqlalchemy import String
 from sqlalchemy.types import TypeDecorator, TEXT
 from iotronic.common import paths
 
-
 sql_opts = [
     cfg.StrOpt('mysql_engine',
                default='InnoDB',
@@ -41,8 +40,7 @@ sql_opts = [
 ]
 
 _DEFAULT_SQL_CONNECTION = 'sqlite:///' + \
-    paths.state_path_def('iotronic.sqlite')
-
+                          paths.state_path_def('iotronic.sqlite')
 
 cfg.CONF.register_opts(sql_opts, 'database')
 db_options.set_defaults(cfg.CONF, _DEFAULT_SQL_CONNECTION, 'iotronic.sqlite')
@@ -92,7 +90,6 @@ class JSONEncodedList(JsonEncodedType):
 
 class IotronicBase(models.TimestampMixin,
                    models.ModelBase):
-
     metadata = None
 
     def as_dict(self):
@@ -109,21 +106,8 @@ class IotronicBase(models.TimestampMixin,
 
         super(IotronicBase, self).save(session)
 
+
 Base = declarative_base(cls=IotronicBase)
-
-
-class Chassis(Base):
-    """Represents a hardware chassis."""
-
-    __tablename__ = 'chassis'
-    __table_args__ = (
-        schema.UniqueConstraint('uuid', name='uniq_chassis0uuid'),
-        table_args()
-    )
-    id = Column(Integer, primary_key=True)
-    uuid = Column(String(36))
-    extra = Column(JSONEncodedDict)
-    description = Column(String(255), nullable=True)
 
 
 class Conductor(Base):
@@ -136,86 +120,49 @@ class Conductor(Base):
     )
     id = Column(Integer, primary_key=True)
     hostname = Column(String(255), nullable=False)
-    drivers = Column(JSONEncodedList)
     online = Column(Boolean, default=True)
 
 
-class Node(Base):
-    """Represents a Node."""
+class WampAgent(Base):
+    """Represents a wampagent service entry."""
 
-    __tablename__ = 'nodes'
+    __tablename__ = 'wampagents'
+    __table_args__ = (
+        schema.UniqueConstraint('hostname', name='uniq_wampagentss0hostname'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True)
+    hostname = Column(String(255), nullable=False)
+    wsurl = Column(String(255), nullable=False)
+    online = Column(Boolean, default=True)
+    ragent = Column(Boolean, default=False)
+
+
+class Board(Base):
+    """Represents a Board."""
+
+    __tablename__ = 'boards'
 
     __table_args__ = (
-        schema.UniqueConstraint('uuid', name='uniq_nodes0uuid'),
-        schema.UniqueConstraint('code', name='uniq_nodes0code'),
+        schema.UniqueConstraint('uuid', name='uniq_boards0uuid'),
+        schema.UniqueConstraint('code', name='uniq_boards0code'),
         table_args())
     id = Column(Integer, primary_key=True)
     uuid = Column(String(36))
     code = Column(String(25))
     status = Column(String(15), nullable=True)
     name = Column(String(255), nullable=True)
-    device = Column(String(255))
-    session = Column(String(255), nullable=True)
+    type = Column(String(255))
+    agent = Column(String(255), nullable=True)
+    owner = Column(String(36))
+    project = Column(String(36))
     mobile = Column(Boolean, default=False)
+    config = Column(JSONEncodedDict)
     extra = Column(JSONEncodedDict)
-"""
-    __tablename__ = 'nodes'
-    '''
-    __table_args__ = (
-        schema.UniqueConstraint('uuid', name='uniq_nodes0uuid'),
-        schema.UniqueConstraint('instance_uuid',
-                                name='uniq_nodes0instance_uuid'),
-        schema.UniqueConstraint('name', name='uniq_nodes0name'),
-        table_args())
-    '''
-    id = Column(Integer, primary_key=True)
-    uuid = Column(String(36))
-    # NOTE(deva): we store instance_uuid directly on the node so that we can
-    #             filter on it more efficiently, even though it is
-    #             user-settable, and would otherwise be in node.properties.
-    uuid = Column(String(36), nullable=True)
-    name = Column(String(255), nullable=True)
-    status = Column(String(10), nullable=True)
-    #chassis_id = Column(Integer, ForeignKey('chassis.id'), nullable=True)
-    #power_state = Column(String(15), nullable=True)
-    #target_power_state = Column(String(15), nullable=True)
-    #provision_state = Column(String(15), nullable=True)
-    #target_provision_state = Column(String(15), nullable=True)
-    #provision_updated_at = Column(DateTime, nullable=True)
-    #last_error = Column(Text, nullable=True)
-    #instance_info = Column(JSONEncodedDict)
-    #properties = Column(JSONEncodedDict)
-    #driver = Column(String(15))
-    #driver_info = Column(JSONEncodedDict)
-    #driver_internal_info = Column(JSONEncodedDict)
-    #clean_step = Column(JSONEncodedDict)
-
-    # NOTE(deva): this is the host name of the conductor which has
-    #             acquired a TaskManager lock on the node.
-    #             We should use an INT FK (conductors.id) in the future.
-    reservation = Column(String(255), nullable=True)
-
-    # NOTE(deva): this is the id of the last conductor which prepared local
-    #             state for the node (eg, a PXE config file).
-    #             When affinity and the hash ring's mapping do not match,
-    #             this indicates that a conductor should rebuild local state.
-    '''
-    conductor_affinity = Column(Integer,
-                                ForeignKey('conductors.id',
-                                           name='nodes_conductor_affinity_fk'),
-                                nullable=True)
-    '''
-    #maintenance = Column(Boolean, default=False)
-    #maintenance_reason = Column(Text, nullable=True)
-    #console_enabled = Column(Boolean, default=False)
-    #inspection_finished_at = Column(DateTime, nullable=True)
-    #inspection_started_at = Column(DateTime, nullable=True)
-    #extra = Column(JSONEncodedDict)
-"""
 
 
 class Location(Base):
-    """Represents a location of a node."""
+    """Represents a location of a board."""
 
     __tablename__ = 'locations'
     __table_args__ = (
@@ -224,11 +171,11 @@ class Location(Base):
     longitude = Column(String(18), nullable=True)
     latitude = Column(String(18), nullable=True)
     altitude = Column(String(18), nullable=True)
-    node_id = Column(Integer, ForeignKey('nodes.id'))
+    board_id = Column(Integer, ForeignKey('boards.id'))
 
 
 class SessionWP(Base):
-    """Represents a session of a node."""
+    """Represents a session of a board."""
 
     __tablename__ = 'sessions'
     __table_args__ = (
@@ -236,26 +183,42 @@ class SessionWP(Base):
             'session_id',
             name='uniq_session_id0session_id'),
         schema.UniqueConstraint(
-            'node_uuid',
-            name='uniq_node_uuid0node_uuid'),
+            'board_uuid',
+            name='uniq_board_uuid0board_uuid'),
         table_args())
     id = Column(Integer, primary_key=True)
     valid = Column(Boolean, default=True)
     session_id = Column(String(15))
-    node_uuid = Column(String(36))
-    node_id = Column(Integer, ForeignKey('nodes.id'))
+    board_uuid = Column(String(36))
+    board_id = Column(Integer, ForeignKey('boards.id'))
 
 
-class Port(Base):
-    """Represents a network port of a bare metal node."""
+class Plugin(Base):
+    """Represents a plugin."""
 
-    __tablename__ = 'ports'
+    __tablename__ = 'plugins'
     __table_args__ = (
-        schema.UniqueConstraint('address', name='uniq_ports0address'),
-        schema.UniqueConstraint('uuid', name='uniq_ports0uuid'),
+        schema.UniqueConstraint('uuid', name='uniq_plugins0uuid'),
         table_args())
     id = Column(Integer, primary_key=True)
     uuid = Column(String(36))
-    address = Column(String(18))
-    node_id = Column(Integer, ForeignKey('nodes.id'), nullable=True)
+    name = Column(String(36))
+    owner = Column(String(36))
+    public = Column(Boolean, default=False)
+    code = Column(TEXT)
+    callable = Column(Boolean)
+    parameters = Column(JSONEncodedDict)
     extra = Column(JSONEncodedDict)
+
+
+class InjectionPlugin(Base):
+    """Represents an plugin injection on board."""
+
+    __tablename__ = 'injection_plugins'
+    __table_args__ = (
+        table_args())
+    id = Column(Integer, primary_key=True)
+    board_uuid = Column(String(36), ForeignKey('boards.uuid'))
+    plugin_uuid = Column(String(36), ForeignKey('plugins.uuid'))
+    onboot = Column(Boolean, default=False)
+    status = Column(String(15))

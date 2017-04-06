@@ -1,6 +1,44 @@
 CHANGES
 =======
 
+* general fixes and checks
+* filtering status of board and checking if it is online
+* now boards receive their location
+* unused stuff have been removed
+* A LOT OF STUFF :)
+* improved plugins api with filters and policies
+* nodes have their links
+* only admin can use the parameter project
+* new 'detail api' for node list
+* fix of a bug for getting a node by its name in the rest api
+* managing wamp message for wamp rpcs
+* new API dev, new policy, keystone integration
+* raw plugin injection
+* create, destroy, list and show commands for plugin have been implemented
+* raw update_node procedure
+* fix shutdown procedures for conductor and agent
+* Remove unused logging import
+* function _on_board renamed to  _on_node
+* function best_agent improved
+* communication between conductor, agents and nodes improved
+* function to execute wamp rpc on the board from the container
+* added wamp agent model on the db
+* default controll exchange changed
+* new conductor module
+* unused modules removed
+* fix import oslo logging
+* Switch to oslo_log
+* wamp address format updated
+* new wamp module and new iotronic wamp agent
+* old wamp module removed
+* requirements for the installation updated
+* Update flake8 ignore list
+* Add Python 3.5 classifier and venv for iotronic
+* Cleanup tox.ini: Remove obsolete constraints
+* Using oslo_config's min attribute
+* Add oslosphinx to requirements.txt
+* build script copies iotronic-conductor file to /usr/bin
+* fix import oslo module
 * cleaning
 * added logs values on cleaning config
 * Starting wamp rpc implementation

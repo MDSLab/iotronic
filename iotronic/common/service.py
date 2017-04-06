@@ -37,9 +37,9 @@ service_opts = [
                help='Seconds between running periodic tasks.'),
     cfg.StrOpt('host',
                default=socket.getfqdn(),
-               help='Name of this node.  This can be an opaque identifier.  '
+               help='Name of this board.  This can be an opaque identifier.  '
                'It is not necessarily a hostname, FQDN, or IP address. '
-               'However, the node name must be valid within '
+               'However, the board name must be valid within '
                'an AMQP key, and if using ZeroMQ, a valid '
                'hostname, FQDN, or IP address.'),
 ]
